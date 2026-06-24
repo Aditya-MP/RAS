@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Outfit:wght@100..900&family=Inter:wght@100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #6366F1;
+  --color-secondary: #8B5CF6;
+  --color-accent: #84cc16;
+  --color-highlight: #FCD34D;
+  --color-success: #10B981;
+  
+  --color-bg-light: #050814;
+  --color-bg-card: #0A0F1D;
+  --color-border-light: rgba(255, 255, 255, 0.08);
+  
+  --font-sans: 'Inter', sans-serif;
+  --font-outfit: 'Outfit', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+}
+
+:root {
+  --background: #050814;
+  --foreground: #F8FAFC;
+  --card: #0A0F1D;
+  --border: rgba(255, 255, 255, 0.08);
+  --primary: #6366F1;
+  --secondary: #8B5CF6;
+  --accent: #84cc16;
+  --highlight: #FCD34D;
+  --success: #10B981;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars for Dark Theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050814;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Dark Mode Glassmorphism Classes */
+.glass {
+  background: rgba(10, 15, 29, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-nav {
+  background: rgba(5, 8, 20, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-card {
+  background: rgba(10, 15, 29, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15), 0 0 20px rgba(13, 148, 136, 0.05);
+  transform: translateY(-5px);
+}
+
+/* Neumorphism/Sleek Tech Card */
+.soft-card {
+  background: #0A0F1D;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+  transition: all 0.25s ease;
+}
+
+.soft-card:hover {
+  box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Neon Text Shadow Adaptations */
+.neon-text-indigo {
+  text-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+}
+
+.neon-text-lime {
+  text-shadow: 0 0 15px rgba(132, 204, 22, 0.45);
+}
+
+.neon-text-teal {
+  text-shadow: 0 0 15px rgba(13, 148, 136, 0.4);
+}
+
+.neon-text-rose {
+  text-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+}
+
+/* Dark Cyber Background Grid */
+.grid-bg {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Animation Utilities */
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% auto;
+  animation: gradient 6s linear infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.85; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
