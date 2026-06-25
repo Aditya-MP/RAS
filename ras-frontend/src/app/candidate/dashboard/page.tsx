@@ -440,83 +440,89 @@ export default function CandidateDashboard() {
   const statCompletedTests = teams.filter(t => t.status === "completed").length;
 
   return (
-    <div className="h-screen bg-[#030712] text-slate-100 flex flex-col relative font-sans overflow-hidden selection:bg-fuchsia-600 selection:text-white">
+    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col relative font-sans overflow-x-hidden selection:bg-orange-600 selection:text-white">
       {/* Background neon glows */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-fuchsia-900/10 rounded-full blur-3xl pointer-events-none z-0" />
-      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-lime-900/5 rounded-full blur-3xl pointer-events-none z-0" />
+      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-orange-950/15 rounded-full blur-3xl pointer-events-none z-0 animate-float-orb" />
+      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-orange-950/10 rounded-full blur-3xl pointer-events-none z-0 animate-float-orb" style={{animationDelay: '2s'}} />
+      <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-orange-900/5 rounded-full blur-3xl pointer-events-none z-0 animate-float-orb" style={{animationDelay: '4s'}} />
 
       {/* HEADER BAR (Cyber-Dark style) */}
-      <header className="px-6 py-4 border-b border-slate-800 bg-[#070b16]/90 backdrop-blur-md relative z-45 flex items-center justify-between h-16 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-fuchsia-600 flex items-center justify-center font-bold text-white font-outfit text-sm shadow-sm shadow-fuchsia-600/20">
-            R
-          </div>
-          <span className="font-extrabold font-outfit text-white text-base tracking-tight">
-            Redrob <span className="text-fuchsia-500">Sandbox</span>
-          </span>
-          <span className="text-[9px] font-mono font-bold bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400 uppercase tracking-widest ml-2 hidden sm:inline-block">
-            Developer Console
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {/* Premium status badge */}
-          {isPremium ? (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-lime-500/10 border border-lime-500/20 rounded-full">
-              <Sparkles className="w-3.5 h-3.5 text-lime-400" />
-              <span className="text-[10px] font-bold text-lime-400 uppercase tracking-wider">Premium Access</span>
+      <header className="border-b border-slate-800 bg-[#070b16]/90 backdrop-blur-md relative z-45 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+        <div className="max-w-[1550px] mx-auto px-6 py-4 flex items-center justify-between h-16 w-full">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded bg-orange-600 flex items-center justify-center font-bold text-white font-outfit text-sm shadow-sm shadow-orange-600/20">
+              R
             </div>
-          ) : (
+            <span className="font-extrabold font-outfit text-white text-base tracking-tight">
+              Redrob <span className="text-orange-500">Sandbox</span>
+            </span>
+            <span className="text-[9px] font-mono font-bold bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400 uppercase tracking-widest ml-2 hidden sm:inline-block">
+              Developer Console
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 md:gap-4">
+            {/* Premium status badge */}
+            {isPremium ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full">
+                <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider hidden sm:inline-block">Premium Access</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => { setSelectedPlan("monthly"); setShowPaymentModal(true); }}
+                className="flex items-center gap-1 px-2.5 py-1 bg-orange-500/10 hover:bg-orange-600 hover:text-white border border-orange-500/20 rounded-full transition-all text-[10px] font-bold text-orange-400 cursor-pointer shadow-xs"
+              >
+                <CreditCard className="w-3 h-3 text-orange-400" />
+                <span>
+                  <span className="hidden sm:inline">Upgrade to Premium</span>
+                  <span className="sm:hidden">Upgrade</span>
+                </span>
+              </button>
+            )}
+
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="w-8 h-8 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-450 flex items-center justify-center text-xs font-bold font-mono shadow-sm">
+                {profile.full_name.substring(0, 2).toUpperCase()}
+              </div>
+              <div className="hidden md:flex flex-col text-left">
+                <span className="text-xs font-bold text-slate-200 leading-none">{profile.full_name}</span>
+                <span className="text-[9px] font-mono text-slate-500 mt-1">{profile.email}</span>
+              </div>
+            </div>
+
             <button
-              onClick={() => { setSelectedPlan("monthly"); setShowPaymentModal(true); }}
-              className="flex items-center gap-1 px-3 py-1 bg-fuchsia-500/10 hover:bg-fuchsia-600 hover:text-white border border-fuchsia-500/20 rounded-full transition-all text-[10px] font-bold text-fuchsia-400 cursor-pointer shadow-xs"
+              onClick={() => signOut()}
+              className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition-all cursor-pointer text-slate-400 hover:text-white"
+              title="Sign Out"
             >
-              <CreditCard className="w-3 h-3 text-fuchsia-400" />
-              <span>Upgrade to Premium</span>
+              <LogOut className="w-4 h-4" />
             </button>
-          )}
-
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-400 flex items-center justify-center text-xs font-bold font-mono shadow-sm">
-              {profile.full_name.substring(0, 2).toUpperCase()}
-            </div>
-            <div className="hidden md:flex flex-col text-left">
-              <span className="text-xs font-bold text-slate-200 leading-none">{profile.full_name}</span>
-              <span className="text-[9px] font-mono text-slate-500 mt-1">{profile.email}</span>
-            </div>
           </div>
-
-          <button
-            onClick={() => signOut()}
-            className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition-all cursor-pointer text-slate-400 hover:text-white"
-            title="Sign Out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
         </div>
       </header>
 
       {/* MAIN ROW LAYOUT CONTAINER */}
-      <div className="flex-grow flex-1 min-h-0 w-full max-w-7xl mx-auto flex flex-col md:flex-row overflow-hidden relative z-10 border-x border-slate-900 bg-[#050814]/30">
+      <div className="flex-grow flex-1 w-full max-w-[1550px] mx-auto flex flex-col md:flex-row relative z-10 border-x border-slate-900 bg-[#050814]/30">
         
         {/* SIDEBAR NAVIGATION */}
-        <aside className="hidden md:flex w-56 lg:w-64 border-r border-slate-800 bg-[#070b16]/65 px-3 py-4 flex-col gap-1.5 shrink-0 overflow-y-auto">
+        <aside className="hidden md:flex w-56 lg:w-64 border-r border-slate-800 bg-[#070b16]/65 px-3 py-4 flex-col gap-1.5 shrink-0 md:sticky md:top-16 md:h-[calc(100vh-64px)] overflow-y-auto">
           <div className="flex items-center justify-between px-3 mb-2 shrink-0">
             <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">
               Main Menu
             </span>
-            <span className="text-[8px] font-mono text-lime-400 bg-lime-500/10 px-2 py-0.5 rounded flex items-center gap-1 border border-lime-500/20">
-              <span className="w-1.5 h-1.5 bg-lime-500 rounded-full animate-ping shrink-0" />
+            <span className="text-[8px] font-mono text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded flex items-center gap-1 border border-orange-500/20">
+              <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping shrink-0" />
               Connected
             </span>
           </div>
 
           <button
             onClick={() => setActiveTab("home")}
-            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer border ${
+            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer ${
               activeTab === "home"
-                ? "bg-fuchsia-600/10 border-fuchsia-500/20 text-fuchsia-400 font-extrabold"
-                : "bg-transparent border-transparent text-slate-400 hover:text-fuchsia-400 hover:bg-fuchsia-950/20"
+                ? "payroute-active text-orange-500 font-extrabold"
+                : "bg-transparent text-slate-400 hover:text-orange-550 hover:text-orange-500 hover:bg-orange-950/10"
             }`}
           >
             <Home className="w-4 h-4" />
@@ -525,10 +531,10 @@ export default function CandidateDashboard() {
 
           <button
             onClick={() => setActiveTab("analysis")}
-            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer border ${
+            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer ${
               activeTab === "analysis"
-                ? "bg-fuchsia-600/10 border-fuchsia-500/20 text-fuchsia-400 font-extrabold"
-                : "bg-transparent border-transparent text-slate-400 hover:text-fuchsia-400 hover:bg-fuchsia-950/20"
+                ? "payroute-active text-orange-500 font-extrabold"
+                : "bg-transparent text-slate-400 hover:text-orange-550 hover:text-orange-500 hover:bg-orange-950/10"
             }`}
           >
             <TrendingUp className="w-4 h-4" />
@@ -537,10 +543,10 @@ export default function CandidateDashboard() {
 
           <button
             onClick={() => setActiveTab("jobs")}
-            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer border ${
+            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer ${
               activeTab === "jobs" || activeTab === "jobs-upload"
-                ? "bg-fuchsia-600/10 border-fuchsia-500/20 text-fuchsia-400 font-extrabold"
-                : "bg-transparent border-transparent text-slate-400 hover:text-fuchsia-400 hover:bg-fuchsia-950/20"
+                ? "payroute-active text-orange-500 font-extrabold"
+                : "bg-transparent text-slate-400 hover:text-orange-550 hover:text-orange-500 hover:bg-orange-950/10"
             }`}
           >
             <Briefcase className="w-4 h-4" />
@@ -549,10 +555,10 @@ export default function CandidateDashboard() {
 
           <button
             onClick={() => setActiveTab("assessment")}
-            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer border ${
+            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer ${
               activeTab === "assessment"
-                ? "bg-fuchsia-600/10 border-fuchsia-500/20 text-fuchsia-400 font-extrabold"
-                : "bg-transparent border-transparent text-slate-400 hover:text-fuchsia-400 hover:bg-fuchsia-950/20"
+                ? "payroute-active text-orange-500 font-extrabold"
+                : "bg-transparent text-slate-400 hover:text-orange-550 hover:text-orange-500 hover:bg-orange-950/10"
             }`}
           >
             <Shield className="w-4 h-4" />
@@ -561,10 +567,10 @@ export default function CandidateDashboard() {
 
           <button
             onClick={() => setActiveTab("results")}
-            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer border ${
+            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer ${
               activeTab === "results"
-                ? "bg-fuchsia-600/10 border-fuchsia-500/20 text-fuchsia-400 font-extrabold"
-                : "bg-transparent border-transparent text-slate-400 hover:text-fuchsia-400 hover:bg-fuchsia-950/20"
+                ? "payroute-active text-orange-500 font-extrabold"
+                : "bg-transparent text-slate-400 hover:text-orange-550 hover:text-orange-500 hover:bg-orange-950/10"
             }`}
           >
             <Award className="w-4 h-4" />
@@ -573,10 +579,10 @@ export default function CandidateDashboard() {
 
           <button
             onClick={() => setActiveTab("profile")}
-            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer border ${
+            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer ${
               activeTab === "profile"
-                ? "bg-fuchsia-600/10 border-fuchsia-500/20 text-fuchsia-400 font-extrabold"
-                : "bg-transparent border-transparent text-slate-400 hover:text-fuchsia-400 hover:bg-fuchsia-950/20"
+                ? "payroute-active text-orange-500 font-extrabold"
+                : "bg-transparent text-slate-400 hover:text-orange-550 hover:text-orange-500 hover:bg-orange-950/10"
             }`}
           >
             <User className="w-4 h-4" />
@@ -585,10 +591,10 @@ export default function CandidateDashboard() {
 
           <button
             onClick={() => setActiveTab("news")}
-            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer border ${
+            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer ${
               activeTab === "news"
-                ? "bg-fuchsia-600/10 border-fuchsia-500/20 text-fuchsia-400 font-extrabold"
-                : "bg-transparent border-transparent text-slate-400 hover:text-fuchsia-400 hover:bg-fuchsia-950/20"
+                ? "payroute-active text-orange-500 font-extrabold"
+                : "bg-transparent text-slate-400 hover:text-orange-550 hover:text-orange-500 hover:bg-orange-950/10"
             }`}
           >
             <Newspaper className="w-4 h-4" />
@@ -597,17 +603,46 @@ export default function CandidateDashboard() {
         </aside>
 
         {/* MAIN VIEWPORT CONTAINER */}
-        <main className="flex-1 min-w-0 overflow-y-auto relative">
+        <main className="flex-1 min-w-0 relative">
+          {/* Mobile Navigation Tabs (Only visible on mobile) */}
+          <div className="md:hidden flex items-center gap-2 overflow-x-auto scrollbar-none px-4 py-3 border-b border-slate-800 bg-[#070b16]/70 sticky top-0 z-20 backdrop-blur-md">
+            {[
+              { id: "home", label: "Home", icon: Home },
+              { id: "analysis", label: "Analytics", icon: TrendingUp },
+              { id: "jobs", label: "Find Jobs", icon: Briefcase },
+              { id: "assessment", label: "Assessment", icon: Shield },
+              { id: "results", label: "Career Results", icon: Award },
+              { id: "profile", label: "My Profile", icon: User },
+              { id: "news", label: "News Hub", icon: Newspaper }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id || (tab.id === "jobs" && activeTab === "jobs-upload");
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold font-outfit whitespace-nowrap transition-all ${
+                    isActive
+                      ? "bg-orange-500/15 text-orange-500 font-extrabold"
+                      : "bg-slate-900/60 text-slate-400"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
           
           {/* TAB 1: HOME PANEL */}
           {activeTab === "home" && (
             <div className="px-6 md:px-10 py-6 md:py-8 w-full flex flex-col gap-6 pb-20">
             
             {/* Profile welcome */}
-            <div className="bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-black/20 hover:border-fuchsia-500/25 transition-all duration-300">
-              <div className="flex flex-col gap-1 text-left">
+            <div className="payroute-card flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+              <div className="flex flex-col gap-1.5 text-left">
                 <h1 className="text-lg md:text-xl font-black font-outfit text-white tracking-tight">
-                  Welcome back, <span className="text-fuchsia-450 text-fuchsia-400">{profile.full_name}</span>
+                  Welcome back, <span className="text-orange-500 neon-text-orange">{profile.full_name}</span>
                 </h1>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-lg font-sans font-medium">
                   Your candidate portal is connected to active assessment workflows. Scanned resumes match semantic hiring channels directly.
@@ -615,45 +650,45 @@ export default function CandidateDashboard() {
               </div>
               <button
                 onClick={() => setActiveTab("profile")}
-                className="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-bold font-outfit text-slate-300 transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="py-2.5 px-5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold font-outfit transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-lg shadow-orange-600/20 hover:shadow-orange-500/30"
               >
                 Edit Profile
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronRight className="w-3.5 h-3.5 text-white" />
               </button>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
-              <div className="p-4 bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] rounded-xl flex flex-col gap-2 relative shadow-lg shadow-black/20 hover:border-fuchsia-500/25 transition-all">
-                <div className="w-8 h-8 rounded-lg bg-fuchsia-500/5 border border-fuchsia-500/15 flex items-center justify-center text-fuchsia-400">
-                  <Briefcase className="w-4 h-4" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 shrink-0">
+              <div className="payroute-card flex flex-col gap-2 relative">
+                <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                  <Briefcase className="w-4.5 h-4.5" />
                 </div>
-                <div className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">Applied</div>
-                <div className="text-xl font-black font-outfit text-white">{12 + appliedJobs.length}</div>
+                <div className="text-[9px] font-mono font-bold text-slate-450 uppercase tracking-widest mt-1">Applied Roles</div>
+                <div className="text-3xl font-black font-outfit text-orange-500 neon-text-orange mt-1">{12 + appliedJobs.length}</div>
               </div>
 
-              <div className="p-4 bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] rounded-xl flex flex-col gap-2 shadow-lg shadow-black/20 hover:border-fuchsia-500/25 transition-all">
-                <div className="w-8 h-8 rounded-lg bg-fuchsia-500/5 border border-fuchsia-500/15 flex items-center justify-center text-fuchsia-400">
-                  <Activity className="w-4 h-4" />
+              <div className="payroute-card flex flex-col gap-2">
+                <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                  <Activity className="w-4.5 h-4.5" />
                 </div>
-                <div className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">Active Jobs</div>
-                <div className="text-xl font-black font-outfit text-white">5</div>
+                <div className="text-[9px] font-mono font-bold text-slate-450 uppercase tracking-widest mt-1">Active Positions</div>
+                <div className="text-3xl font-black font-outfit text-orange-500 neon-text-orange mt-1">5</div>
               </div>
 
-              <div className="p-4 bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] rounded-xl flex flex-col gap-2 shadow-lg shadow-black/20 hover:border-fuchsia-500/25 transition-all">
-                <div className="w-8 h-8 rounded-lg bg-lime-500/5 border border-lime-500/15 flex items-center justify-center text-lime-400">
-                  <Award className="w-4 h-4" />
+              <div className="payroute-card flex flex-col gap-2">
+                <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                  <Award className="w-4.5 h-4.5" />
                 </div>
-                <div className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">Shortlisted</div>
-                <div className="text-xl font-black font-outfit text-white">2</div>
+                <div className="text-[9px] font-mono font-bold text-slate-450 uppercase tracking-widest mt-1">Shortlisted</div>
+                <div className="text-3xl font-black font-outfit text-orange-500 neon-text-orange mt-1">2</div>
               </div>
 
-              <div className="p-4 bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] rounded-xl flex flex-col gap-2 shadow-lg shadow-black/20 hover:border-fuchsia-500/25 transition-all">
-                <div className="w-8 h-8 rounded-lg bg-lime-500/5 border border-lime-500/15 flex items-center justify-center text-lime-400">
-                  <CheckCircle className="w-4 h-4" />
+              <div className="payroute-card flex flex-col gap-2">
+                <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                  <CheckCircle className="w-4.5 h-4.5" />
                 </div>
-                <div className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">Tests Taken</div>
-                <div className="text-xl font-black font-outfit text-white">3</div>
+                <div className="text-[9px] font-mono font-bold text-slate-450 uppercase tracking-widest mt-1">Tests Evaluated</div>
+                <div className="text-3xl font-black font-outfit text-orange-500 neon-text-orange mt-1">3</div>
               </div>
             </div>
 
@@ -661,146 +696,141 @@ export default function CandidateDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 shrink-0">
               
               {/* Left: Job Market Analysis summary card */}
-              <div className="lg:col-span-7 bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] p-5 rounded-2xl flex flex-col gap-3 shadow-lg shadow-black/20 text-left hover:border-fuchsia-500/25 transition-all">
+              <div className="lg:col-span-7 payroute-card flex flex-col gap-4 text-left shadow-xl">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xs font-black text-white uppercase tracking-wider">Job Market Analysis</h3>
-                    <p className="text-[9px] text-slate-500 mt-0.5">Aggregate fullstack engineering job demand over time</p>
+                    <h3 className="text-sm font-black text-slate-100 font-outfit uppercase tracking-wider">Job Market Trend</h3>
+                    <p className="text-[10px] text-slate-500 mt-0.5 font-sans">Fullstack engineering recruitment searches aggregate volume</p>
                   </div>
-                  <span className="text-[8px] font-mono font-bold bg-lime-500/10 border border-lime-500/20 px-2 py-0.5 rounded text-lime-400 uppercase">
+                  <span className="text-[9px] font-mono font-bold bg-orange-500/10 px-2.5 py-0.5 rounded text-orange-500 uppercase tracking-wide">
                     Hiring Surge
                   </span>
                 </div>
 
                 {/* Inline Chart */}
-                <div className="w-full h-28 relative">
+                <div className="w-full h-32 relative mt-2">
                   <svg className="w-full h-full" viewBox="0 0 600 200" preserveAspectRatio="none">
                     <defs>
-                      <linearGradient id="homeChartGradLime" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#84cc16" stopOpacity="0.1" />
-                        <stop offset="100%" stopColor="#84cc16" stopOpacity="0.0" />
+                      <linearGradient id="homeChartGradOrange" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#f97316" stopOpacity="0.15" />
+                        <stop offset="100%" stopColor="#f97316" stopOpacity="0.0" />
                       </linearGradient>
                     </defs>
-                    <line x1="0" y1="50" x2="600" y2="50" stroke="rgba(255, 255, 255, 0.02)" strokeWidth="1" />
-                    <line x1="0" y1="100" x2="600" y2="100" stroke="rgba(255, 255, 255, 0.02)" strokeWidth="1" />
-                    <line x1="0" y1="150" x2="600" y2="150" stroke="rgba(255, 255, 255, 0.02)" strokeWidth="1" />
+                    <line x1="0" y1="50" x2="600" y2="50" stroke="rgba(255, 255, 255, 0.015)" strokeWidth="1" />
+                    <line x1="0" y1="100" x2="600" y2="100" stroke="rgba(255, 255, 255, 0.015)" strokeWidth="1" />
+                    <line x1="0" y1="150" x2="600" y2="150" stroke="rgba(255, 255, 255, 0.015)" strokeWidth="1" />
                     
                     <path
                       d="M 0,200 L 0,160 Q 120,130 200,90 T 400,60 Q 500,70 600,30 L 600,200 Z"
-                      fill="url(#homeChartGradLime)"
+                      fill="url(#homeChartGradOrange)"
                     />
                     <path
                       d="M 0,160 Q 120,130 200,90 T 400,60 Q 500,70 600,30"
                       fill="none"
-                      stroke="#84cc16"
-                      strokeWidth="2.5"
+                      stroke="#f97316"
+                      strokeWidth="3.5"
                       strokeLinecap="round"
+                      className="glow-path-orange"
                     />
-                    <circle cx="200" cy="90" r="4.5" fill="#a3e635" stroke="#090d16" strokeWidth="1.5" />
-                    <circle cx="400" cy="60" r="4.5" fill="#a3e635" stroke="#090d16" strokeWidth="1.5" />
-                    <circle cx="600" cy="30" r="4.5" fill="#a3e635" stroke="#090d16" strokeWidth="1.5" />
+                    <circle cx="200" cy="90" r="5" fill="#f97316" stroke="#030712" strokeWidth="2" />
+                    <circle cx="400" cy="60" r="5" fill="#f97316" stroke="#030712" strokeWidth="2" />
+                    <circle cx="600" cy="30" r="5.5" fill="#f97316" stroke="#030712" strokeWidth="2" />
                   </svg>
                 </div>
 
-                <div className="border-t border-slate-800/80 pt-2.5 flex flex-col gap-1.5 text-[10px]">
+                <div className="border-t border-slate-800/60 pt-4 flex flex-col gap-2 text-xs">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-slate-400">📈 Trending Now:</span>
-                    <span className="font-bold text-slate-200">React, Node.js, AI/ML Agents, WebSockets</span>
+                    <span className="font-semibold text-slate-400 font-sans">📈 Trending Skills:</span>
+                    <span className="font-bold text-slate-200 font-mono text-[11px]">React, Node.js, AI Agents, WebSockets</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-slate-400">🔥 Hot Time:</span>
-                    <span className="font-bold text-lime-400 bg-lime-500/5 border border-lime-500/15 px-2 py-0.5 rounded">2026 Q3 Predicted Hiring Surge</span>
+                    <span className="font-semibold text-slate-400 font-sans">🔥 Timing Threshold:</span>
+                    <span className="font-bold text-orange-400 bg-orange-500/5 px-2 py-0.5 rounded font-sans text-[11px]">Q3 Surge Active</span>
                   </div>
                 </div>
               </div>
 
-              {/* Right: Active Assessments list */}
-              <div className="lg:col-span-5 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-[10px] font-black text-white uppercase tracking-wider">
-                    Assessment Snapshots
-                  </h2>
-                  <button onClick={fetchTeams} className="text-[10px] font-mono font-bold text-fuchsia-400 hover:underline cursor-pointer">
-                    Refresh
-                  </button>
+              {/* Right: Active Assessments list wrapped in bento cell */}
+              <div className="lg:col-span-5 payroute-card p-6 flex flex-col gap-4 text-left justify-between">
+                <div className="flex flex-col gap-3.5">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <h2 className="text-xs font-black text-slate-100 font-outfit uppercase tracking-wider">
+                      Assessment Snapshots
+                    </h2>
+                    <button onClick={fetchTeams} className="text-[10px] font-mono font-bold text-orange-500 hover:underline cursor-pointer">
+                      Refresh
+                    </button>
+                  </div>
+
+                  {loadingTeams ? (
+                    <div className="min-h-[110px] flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+                    </div>
+                  ) : teams.length === 0 ? (
+                    <div className="py-6 text-center flex flex-col items-center justify-center gap-1.5">
+                      <Shield className="w-5 h-5 text-slate-600" />
+                      <p className="text-[10px] text-slate-550 text-slate-500 font-sans max-w-[200px]">
+                        No active workspace invitations. Verify UID in the Assessment tab.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2.5">
+                      {teams.slice(0, 2).map(team => (
+                        <div key={team.id} className="p-3 bg-slate-900/50 border-none rounded-xl flex items-center justify-between gap-3 transition-all hover:bg-slate-900/80">
+                          <div className="flex flex-col text-left min-w-0">
+                            <span className="text-[8px] font-mono font-bold px-1.5 py-0.2 bg-slate-950 text-slate-400 w-fit rounded capitalize">
+                              {team.assessment?.tech_track}
+                            </span>
+                            <h3 className="text-xs font-bold text-slate-200 mt-1 truncate">
+                              {team.assessment?.title}
+                            </h3>
+                          </div>
+
+                          <div className="shrink-0">
+                            {team.status === "active" ? (
+                              <Link
+                                href={`/candidate/workspace/${team.id}`}
+                                className="py-1.5 px-3 bg-orange-600 hover:bg-orange-500 text-white font-bold font-outfit text-[9px] rounded-lg transition-all flex items-center gap-1 cursor-pointer shadow-md"
+                              >
+                                Join
+                                <Play className="w-2.5 h-2.5 fill-white text-white" />
+                              </Link>
+                            ) : team.status === "completed" ? (
+                              <Link
+                                href={`/candidate/workspace/${team.id}/review`}
+                                className="py-1.5 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 font-bold font-outfit text-[9px] rounded-lg transition-all cursor-pointer border-none"
+                              >
+                                Review
+                              </Link>
+                            ) : (
+                              <button
+                                onClick={() => { setUidInput(team.id); setActiveTab("assessment"); }}
+                                className="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-750 text-slate-350 font-bold font-outfit text-[9px] rounded-lg transition-all cursor-pointer border-none"
+                              >
+                                Verify UID
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {loadingTeams ? (
-                  <div className="min-h-[110px] flex items-center justify-center bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] rounded-xl">
-                    <Loader2 className="w-5 h-5 animate-spin text-fuchsia-500" />
-                  </div>
-                ) : teams.length === 0 ? (
-                  <div className="p-4 text-center bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] rounded-xl flex flex-col items-center justify-center gap-1">
-                    <Shield className="w-4 h-4 text-slate-500" />
-                    <p className="text-[9px] text-slate-500 font-sans">
-                      No active workspace invitations. Verify UID in the Assessment tab.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {teams.slice(0, 2).map(team => (
-                      <div key={team.id} className="p-3 bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] hover:border-fuchsia-500/30 rounded-xl flex items-center justify-between gap-3 transition-all">
-                        <div className="flex flex-col text-left min-w-0">
-                          <span className="text-[8px] font-mono font-bold px-1.5 py-0.2 bg-slate-900 border border-slate-800 text-slate-400 w-fit rounded capitalize">
-                            {team.assessment?.tech_track}
-                          </span>
-                          <h3 className="text-xs font-bold text-slate-200 mt-1 truncate">
-                            {team.assessment?.title}
-                          </h3>
-                        </div>
-
-                        <div className="shrink-0">
-                          {team.status === "active" ? (
-                            <Link
-                              href={`/candidate/workspace/${team.id}`}
-                              className="py-1 px-2.5 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold font-outfit text-[9px] rounded-lg transition-all flex items-center gap-1 cursor-pointer"
-                            >
-                              Join
-                              <Play className="w-2 h-2 fill-white text-white" />
-                            </Link>
-                          ) : team.status === "completed" ? (
-                            <Link
-                              href={`/candidate/workspace/${team.id}/review`}
-                              className="py-1 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold font-outfit text-[9px] rounded-lg transition-all cursor-pointer"
-                            >
-                              Review
-                            </Link>
-                          ) : (
-                            <button
-                              onClick={() => { setUidInput(team.id); setActiveTab("assessment"); }}
-                              className="py-1 px-2 bg-slate-800 hover:bg-slate-700 text-slate-350 font-bold font-outfit text-[9px] rounded-lg transition-all cursor-pointer"
-                            >
-                              Verify UID
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
                 {/* Mini Notifications inbox */}
-                <div className="bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] p-3 rounded-xl flex flex-col gap-2 shadow-2xs text-left">
-                  <span className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest">System Alerts</span>
+                <div className="bg-slate-900/40 border-none p-3.5 rounded-xl flex flex-col gap-2 text-left mt-3">
+                  <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">Security System Alerts</span>
                   {notifications.slice(0, 2).map(n => (
-                    <div key={n.id} className="text-left pb-1.5 border-b border-slate-800 last:border-b-0 last:pb-0 flex items-start gap-2">
-                      <div className="mt-0.5 shrink-0">
-                        {n.type === "alert" ? (
-                          <AlertTriangle className="w-3 h-3 text-amber-500" />
-                        ) : n.type === "success" ? (
-                          <CheckCircle className="w-3 h-3 text-lime-400" />
-                        ) : (
-                          <Bell className="w-3 h-3 text-fuchsia-400" />
-                        )}
+                    <div key={n.id} className="flex items-start gap-2 text-[10px]">
+                      <div className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0 bg-orange-500`} />
+                      <div className="flex flex-col">
+                        <p className="text-slate-300 font-medium leading-normal">{n.text}</p>
+                        <span className="text-[8px] font-mono text-slate-500 mt-0.5">{n.date}</span>
                       </div>
-                      <p className="text-[10px] text-slate-300 font-sans leading-relaxed">
-                        {n.text}
-                      </p>
                     </div>
                   ))}
                 </div>
               </div>
-
             </div>
 
             {/* Bottom: Personalized Job Recommendations */}
@@ -854,156 +884,205 @@ export default function CandidateDashboard() {
                 ))}
               </div>
             </div>
-
           </div>
         )}
 
         {/* TAB 2: MARKET ANALYTICS */}
         {activeTab === "analysis" && (
           <div className="px-6 md:px-10 py-6 md:py-8 w-full flex flex-col gap-6 pb-20">
-            <div className="flex flex-col gap-1 text-left shrink-0">
-              <h1 className="text-lg font-black font-outfit text-white uppercase tracking-wider">
+            <div className="flex flex-col gap-1.5 text-left shrink-0">
+              <h1 className="text-xl font-black font-outfit text-white uppercase tracking-wider">
                 Job Market Analytics & Timing Hotspots
               </h1>
-              <p className="text-xs text-slate-400 leading-normal font-medium">
+              <p className="text-xs text-slate-400 font-sans font-medium">
                 Real-time engineering job demand tracking, timing advantages, and automated skill-gap analysis.
               </p>
             </div>
 
-            {/* Line Graph block */}
-            <div className="bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] p-5 rounded-2xl shadow-sm flex flex-col gap-4 text-left shrink-0 hover:border-lime-500/25 transition-all">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs font-bold text-white">Engineering Job Demand Trend (2025 - 2026)</h3>
-                  <p className="text-[9px] text-slate-500">Aggregate volume of recruitment searches in agentic fullstack layers</p>
-                </div>
-                <div className="text-[9px] font-mono font-bold bg-lime-500/10 border border-lime-500/20 px-2 py-0.5 rounded text-lime-400 uppercase">
-                  Hiring Surge Predicted
-                </div>
-              </div>
-
-              {/* SVG Graph */}
-              <div className="w-full h-40 mt-2 relative">
-                <svg className="w-full h-full" viewBox="0 0 600 200" preserveAspectRatio="none">
-                  <line x1="0" y1="50" x2="600" y2="50" stroke="rgba(255, 255, 255, 0.02)" strokeWidth="1" />
-                  <line x1="0" y1="100" x2="600" y2="100" stroke="rgba(255, 255, 255, 0.02)" strokeWidth="1" />
-                  <line x1="0" y1="150" x2="600" y2="150" stroke="rgba(255, 255, 255, 0.02)" strokeWidth="1" />
-
-                  <path
-                    d="M 0,200 L 0,160 Q 120,130 200,90 T 400,60 Q 500,70 600,30 L 600,200 Z"
-                    fill="url(#homeChartGradLime)"
-                  />
-                  <path
-                    d="M 0,160 Q 120,130 200,90 T 400,60 Q 500,70 600,30"
-                    fill="none"
-                    stroke="#84cc16"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                  />
-
-                  <circle cx="200" cy="90" r="4" fill="#a3e635" stroke="#090d16" strokeWidth="1.5" />
-                  <circle cx="400" cy="60" r="4" fill="#a3e635" stroke="#090d16" strokeWidth="1.5" />
-                  <circle cx="600" cy="30" r="4.5" fill="#a3e635" stroke="#090d16" strokeWidth="1.5" />
-                </svg>
-                
-                {/* Tooltip Simulation */}
-                <div className="absolute top-[10px] right-[10px] bg-[#090d16] border border-fuchsia-500/25 p-2 rounded-xl text-left shadow-lg pointer-events-none text-[10px]">
-                  <span className="text-[8px] font-mono text-slate-500 uppercase">Current Month (June 2026)</span>
-                  <div className="text-[11px] font-black text-white font-outfit mt-0.5">Peak Volume: +42% YoY</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 border-t border-slate-800/80 pt-3 text-center text-[10px]">
-                <div>
-                  <span className="text-[9px] font-mono text-slate-500">Q3 2025</span>
-                  <div className="font-bold text-slate-400 mt-0.5">Stable</div>
-                </div>
-                <div>
-                  <span className="text-[9px] font-mono text-slate-500">Q4 2025</span>
-                  <div className="font-bold text-slate-400 mt-0.5">Moderate</div>
-                </div>
-                <div>
-                  <span className="text-[9px] font-mono text-slate-500">Q1 2026</span>
-                  <div className="font-bold text-slate-400 mt-0.5">Growth</div>
-                </div>
-                <div>
-                  <span className="text-[9px] font-mono text-slate-500">Q2 2026 (Now)</span>
-                  <div className="font-bold text-lime-400 mt-0.5">Peak Surge</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Heatmaps and company insights */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 shrink-0">
+            {/* Bento Grid layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full">
               
-              {/* Hot skills heatmap list */}
-              <div className="md:col-span-6 p-5 bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] rounded-xl flex flex-col gap-3 text-left">
-                <h3 className="text-[10px] font-black text-white uppercase tracking-wider flex items-center gap-1.5 font-mono">
-                  <Activity className="w-4 h-4 text-lime-400" />
-                  Demand Heatmap by Tech Skill
+              {/* Cell 1: Line Graph block (Col-span-8) */}
+              <div className="lg:col-span-8 payroute-card p-6 flex flex-col gap-5 text-left shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-100 font-outfit uppercase tracking-wider">Engineering Job Demand Trend</h3>
+                    <p className="text-[10px] text-slate-500 mt-0.5 font-sans">Aggregate volume of recruitment searches in agentic fullstack layers (2025 - 2026)</p>
+                  </div>
+                  <div className="text-[9px] font-mono font-bold bg-orange-500/10 px-2.5 py-0.5 rounded text-orange-500 uppercase tracking-wider">
+                    Surge Phase Active
+                  </div>
+                </div>
+
+                {/* SVG Graph with Glow */}
+                <div className="w-full h-44 mt-3 relative">
+                  <svg className="w-full h-full" viewBox="0 0 600 200" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="analysisChartGradOrange" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#f97316" stopOpacity="0.15" />
+                        <stop offset="100%" stopColor="#f97316" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <line x1="0" y1="50" x2="600" y2="50" stroke="rgba(255, 255, 255, 0.015)" strokeWidth="1" />
+                    <line x1="0" y1="100" x2="600" y2="100" stroke="rgba(255, 255, 255, 0.015)" strokeWidth="1" />
+                    <line x1="0" y1="150" x2="600" y2="150" stroke="rgba(255, 255, 255, 0.015)" strokeWidth="1" />
+
+                    <path
+                      d="M 0,200 L 0,160 Q 120,130 200,90 T 400,60 Q 500,70 600,30 L 600,200 Z"
+                      fill="url(#analysisChartGradOrange)"
+                    />
+                    <path
+                      d="M 0,160 Q 120,130 200,90 T 400,60 Q 500,70 600,30"
+                      fill="none"
+                      stroke="#f97316"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      className="glow-path-orange"
+                    />
+
+                    <circle cx="200" cy="90" r="5" fill="#f97316" stroke="#030712" strokeWidth="2" />
+                    <circle cx="400" cy="60" r="5" fill="#f97316" stroke="#030712" strokeWidth="2" />
+                    <circle cx="600" cy="30" r="5.5" fill="#f97316" stroke="#030712" strokeWidth="2.5" />
+                  </svg>
+                  
+                  {/* Tooltip Simulation */}
+                  <div className="absolute top-2.5 right-2.5 bg-slate-950/90 border border-orange-500/20 p-2.5 rounded-xl text-left shadow-xl pointer-events-none text-[10px] backdrop-blur-md">
+                    <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">Active Forecast</span>
+                    <div className="text-[11px] font-black text-slate-100 font-outfit mt-0.5">Peak Surge: +42.6% YoY</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 border-t border-slate-800/60 pt-4 text-center text-[10px] font-mono">
+                  <div>
+                    <span className="text-slate-500">Q3 2025</span>
+                    <div className="font-bold text-slate-400 mt-1 font-sans text-xs">Stable Base</div>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Q4 2025</span>
+                    <div className="font-bold text-slate-400 mt-1 font-sans text-xs">Gradual Rise</div>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Q1 2026</span>
+                    <div className="font-bold text-slate-400 mt-1 font-sans text-xs">Accelerating</div>
+                  </div>
+                  <div>
+                    <span className="text-orange-400 font-extrabold">Q2 2026 (Now)</span>
+                    <div className="font-bold text-orange-400 mt-1 font-sans text-xs">Peak Demand</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cell 2: Timing Advantage Analysis (Col-span-4) */}
+              <div className="lg:col-span-4 payroute-card p-6 flex flex-col justify-between text-left shadow-xl">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black text-slate-100 font-outfit uppercase tracking-wider flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-orange-500" />
+                      Timing Hotspots
+                    </h3>
+                    <span className="text-[9px] font-mono font-bold bg-orange-500/10 px-2 py-0.5 rounded text-orange-500 uppercase tracking-wider">
+                      Q3 Alert
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-baseline gap-2 mt-2">
+                    <span className="text-4xl font-black font-outfit text-orange-500 tracking-tight neon-text-orange">3.4x</span>
+                    <span className="text-xs text-slate-300 font-medium font-sans">Assessment Rate Increase</span>
+                  </div>
+
+                  <p className="text-xs leading-relaxed text-slate-400 mt-1 font-sans">
+                    Candidates applying in <span className="font-extrabold text-white">Q3 (July - August)</span> experience a massive surge in team sandboxing invitations as corporate budgets refresh.
+                  </p>
+                </div>
+
+                <div className="bg-slate-900/40 border-none p-3.5 rounded-xl flex flex-col gap-2 mt-4">
+                  <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">Active Channels</span>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-400 font-sans">DevOps & Platforms</span>
+                    <span className="font-bold text-emerald-450">92% priority</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] border-t border-white/[0.02] pt-1.5">
+                    <span className="text-slate-400 font-sans">Security Engineering</span>
+                    <span className="font-bold text-emerald-400">86% priority</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cell 3: Hot skills heatmap list (Col-span-6) */}
+              <div className="lg:col-span-6 payroute-card p-6 flex flex-col gap-4 text-left hover:bg-slate-900/40">
+                <h3 className="text-xs font-black text-slate-100 font-outfit uppercase tracking-wider flex items-center gap-1.5">
+                  <Activity className="w-4 h-4 text-orange-500" />
+                  Tech Skill Demand Heatmap
                 </h3>
                 
-                <div className="flex flex-col gap-3.5 mt-1">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex justify-between text-[10px]">
-                      <span className="font-bold text-slate-300">AI Agents & System Architecture</span>
-                      <span className="font-mono text-lime-400 font-bold">98% volume</span>
+                <div className="flex flex-col gap-4 mt-2">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-bold text-slate-200 font-sans">AI Agents & System Architecture</span>
+                      <span className="font-mono text-orange-500 font-bold">98% Search Vol</span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                      <div className="h-full bg-lime-500 rounded-full" style={{ width: "98%" }} />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <div className="flex justify-between text-[10px]">
-                      <span className="font-bold text-slate-300">Next.js & Serverless UI</span>
-                      <span className="font-mono text-lime-400 font-bold">88% volume</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                      <div className="h-full bg-lime-500 rounded-full" style={{ width: "88%" }} />
+                    <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                      <div className="h-full payroute-progress-fill rounded-full" style={{ width: "98%" }} />
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <div className="flex justify-between text-[10px]">
-                      <span className="font-bold text-slate-300">WebSocket / Telemetry Systems</span>
-                      <span className="font-mono text-lime-400 font-bold">75% volume</span>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-bold text-slate-200 font-sans">Next.js & Serverless UI</span>
+                      <span className="font-mono text-orange-500 font-bold">88% Search Vol</span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                      <div className="h-full bg-lime-500 rounded-full" style={{ width: "75%" }} />
+                    <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                      <div className="h-full payroute-progress-fill rounded-full" style={{ width: "88%" }} />
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <div className="flex justify-between text-[10px]">
-                      <span className="font-bold text-slate-300">WebGL & Canvas Graphics</span>
-                      <span className="font-mono text-lime-400 font-bold">62% volume</span>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-bold text-slate-200 font-sans">WebSocket / Telemetry Systems</span>
+                      <span className="font-mono text-orange-500 font-bold">75% Search Vol</span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                      <div className="h-full bg-lime-500 rounded-full" style={{ width: "62%" }} />
+                    <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                      <div className="h-full payroute-progress-fill rounded-full" style={{ width: "75%" }} />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-bold text-slate-200 font-sans">WebGL & Canvas Graphics</span>
+                      <span className="font-mono text-orange-500 font-bold">62% Search Vol</span>
+                    </div>
+                    <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                      <div className="h-full payroute-progress-fill rounded-full" style={{ width: "62%" }} />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Timing Advantage Analysis */}
-              <div className="md:col-span-6 p-5 bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] rounded-xl flex flex-col gap-3 text-left">
-                <h3 className="text-[10px] font-black text-white uppercase tracking-wider flex items-center gap-1.5 font-mono">
-                  <Clock className="w-4 h-4 text-lime-400" />
-                  Hiring Timing Hotspots
-                </h3>
-                
-                <div className="p-3 bg-fuchsia-950/20 border border-fuchsia-900/35 rounded-lg text-xs leading-relaxed text-slate-300">
-                  <span className="font-extrabold text-fuchsia-400 block mb-1">Timing Hotspot Alert: Q3 Surge</span>
-                  Historical statistics show candidates submitting applications in Q3 (July - August) experience a **3.4x higher rate** of team sandboxing. Corporate hiring teams allocate fresh assessment pools during this cycle. 
+              {/* Cell 4: Recruitment Insights (Col-span-6) */}
+              <div className="lg:col-span-6 payroute-card p-6 flex flex-col gap-4 text-left justify-between hover:bg-slate-900/40">
+                <div className="flex flex-col gap-3">
+                  <h3 className="text-xs font-black text-slate-100 font-outfit uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-orange-500" />
+                    Agentic Market Insights
+                  </h3>
+                  
+                  <div className="p-3 bg-orange-950/10 border-none rounded-xl text-[11px] leading-relaxed text-slate-350 font-sans">
+                    <span className="font-extrabold text-orange-400 block mb-1">Resume Verification Advantage</span>
+                    AI screeners are increasingly discarding plain PDFs. Candidates possessing a verified <span className="text-orange-500 font-semibold">HCD Resume Report</span> score a 78% higher response rate.
+                  </div>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <h4 className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest">Recruitment Insights</h4>
-                  <ul className="text-[10px] text-slate-400 space-y-1.5 list-disc list-inside font-medium">
-                    <li>Mass hiring campaigns targeting DevOps and Security pipelines.</li>
-                    <li>High demand for fullstack candidates with verified HCD resume reports.</li>
-                    <li>Socratic evaluation scores are heavily reviewed for Senior and Architect roles.</li>
+                <div className="flex flex-col gap-2 mt-4">
+                  <h4 className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">Key Takeaways</h4>
+                  <ul className="text-xs text-slate-400 space-y-2 font-medium font-sans">
+                    <li className="flex items-start gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
+                      Mass hiring campaigns targeting robust developer pipeline tooling.
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
+                      Socratic evaluation scores are heavily reviewed for senior and lead roles.
+                    </li>
                   </ul>
                 </div>
               </div>

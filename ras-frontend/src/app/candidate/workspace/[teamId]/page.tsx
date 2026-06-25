@@ -648,46 +648,49 @@ export default function CandidateWorkspacePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#02040a] text-slate-100 flex flex-col h-screen overflow-hidden">
+    <div className="min-h-screen bg-[#02040a] text-slate-100 flex flex-col h-screen overflow-hidden overflow-x-hidden">
       
       {/* Workspace Header */}
-      <header className="px-6 py-4 border-b border-white/5 bg-[#0d1117] flex items-center justify-between z-10 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded bg-accent flex items-center justify-center font-bold text-black text-xs font-outfit">
-            R
-          </div>
-          <span className="font-extrabold font-outfit text-white text-sm">
-            Redrob <span className="text-accent">Sandbox</span>
-          </span>
-          <span className="text-[9px] font-mono font-bold bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-400 uppercase tracking-widest">
-            IDE Workspace
-          </span>
-
-          {/* WebSocket stream status */}
-          <div className="flex items-center gap-1.5 ml-4 bg-white/[0.02] border border-white/5 px-2.5 py-1 rounded-lg">
-            <span className={`w-2 h-2 rounded-full ${socketConnected ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
-            <span className="text-[10px] font-mono text-slate-500">
-              {socketConnected ? "Telemetry stream active" : "Connecting..."}
+      <header className="border-b border-white/5 bg-[#0d1117] relative z-10 shrink-0">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between h-16 w-full">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded bg-accent flex items-center justify-center font-bold text-black text-xs font-outfit">
+              R
+            </div>
+            <span className="font-extrabold font-outfit text-white text-sm">
+              Redrob <span className="text-accent">Sandbox</span>
             </span>
-          </div>
-        </div>
+            <span className="text-[9px] font-mono font-bold bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-400 uppercase tracking-widest hidden sm:inline-block">
+              IDE Workspace
+            </span>
 
-        {/* Global Chaos Warning bar */}
-        {activeChaos.length > 0 && (
-          <div className="hidden md:flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs px-3.5 py-1.5 rounded-full animate-pulse font-semibold">
-            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-            <span>Chamber Alert: System Fault Injected! Resolve in the panel.</span>
+            {/* WebSocket stream status */}
+            <div className="flex items-center gap-1.5 ml-2 sm:ml-4 bg-white/[0.02] border border-white/5 px-2 py-1 sm:px-2.5 rounded-lg">
+              <span className={`w-2 h-2 rounded-full ${socketConnected ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
+              <span className="text-[10px] font-mono text-slate-500 hidden sm:inline-block">
+                {socketConnected ? "Telemetry stream active" : "Connecting..."}
+              </span>
+            </div>
           </div>
-        )}
 
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setShowSubmitModal(true)}
-            className="py-2 px-4 bg-rose-600 hover:bg-rose-700 text-white font-bold font-outfit text-xs rounded-xl shadow-lg shadow-rose-600/10 transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            End Assessment Session
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          {/* Global Chaos Warning bar */}
+          {activeChaos.length > 0 && (
+            <div className="hidden md:flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs px-3.5 py-1.5 rounded-full animate-pulse font-semibold">
+              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+              <span>Chamber Alert: System Fault Injected! Resolve in the panel.</span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowSubmitModal(true)}
+              className="py-2 px-4 bg-rose-600 hover:bg-rose-700 text-white font-bold font-outfit text-xs rounded-xl shadow-lg shadow-rose-600/10 transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <span className="hidden sm:inline">End Assessment Session</span>
+              <span className="sm:hidden">End Session</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </header>
 

@@ -163,24 +163,28 @@ export default function EmployerCandidateReportPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050814] text-slate-100 flex flex-col relative">
+    <div className="min-h-screen bg-[#050814] text-slate-100 flex flex-col relative overflow-x-hidden">
       <div className="grid-bg absolute inset-0 opacity-5 pointer-events-none z-0" />
+      <div className="absolute top-10 left-1/3 w-[500px] h-[500px] bg-violet-900/12 rounded-full blur-3xl pointer-events-none z-0 animate-float-orb" />
+      <div className="absolute bottom-20 right-10 w-[400px] h-[400px] bg-cyan-900/8 rounded-full blur-3xl pointer-events-none z-0 animate-float-orb" style={{animationDelay: '3s'}} />
 
       {/* Header */}
-      <header className="px-8 py-5 border-b border-white/5 bg-slate-950/40 backdrop-blur-md relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.back()}
-            className="p-2 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white mr-2 transition-all cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
-            R
+      <header className="border-b border-white/5 bg-slate-950/40 backdrop-blur-md relative z-10 shrink-0">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between h-16 w-full">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.back()}
+              className="p-2 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white mr-2 transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
+              R
+            </div>
+            <span className="font-extrabold font-outfit text-white text-base">
+              Redrob <span className="text-accent">Sandbox</span>
+            </span>
           </div>
-          <span className="font-extrabold font-outfit text-white text-base">
-            Redrob <span className="text-accent">Sandbox</span>
-          </span>
         </div>
       </header>
 
@@ -191,9 +195,9 @@ export default function EmployerCandidateReportPage() {
         <div className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-8">
           
           {/* Candidate Profile summary */}
-          <div className="glass-card p-6 rounded-3xl border border-white/5 shadow-xl flex flex-col gap-4">
+          <div className="welcome-banner p-6 rounded-3xl shadow-xl flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-accent/10 border border-accent/20 rounded-2xl text-accent">
+              <div className="p-3 bg-violet-500/10 border border-violet-500/20 rounded-2xl text-violet-400">
                 <User className="w-5.5 h-5.5" />
               </div>
               <div className="text-left">
@@ -204,7 +208,7 @@ export default function EmployerCandidateReportPage() {
           </div>
 
           {/* Percentile Dial */}
-          <div className="glass-card p-8 rounded-3xl border border-white/5 shadow-2xl flex flex-col items-center text-center gap-6">
+          <div className="vibrant-card p-8 rounded-3xl shadow-2xl flex flex-col items-center text-center gap-6 rainbow-top-line">
             <h2 className="text-xs font-bold font-mono text-slate-400 uppercase tracking-widest leading-none">
               Evaluation Percentile
             </h2>
@@ -223,15 +227,23 @@ export default function EmployerCandidateReportPage() {
                   cx="50"
                   cy="50"
                   r="42"
-                  className="stroke-accent fill-none transition-all duration-1000 ease-out"
+                  className="fill-none transition-all duration-1000 ease-out"
                   strokeWidth="8"
                   strokeDasharray={`${2 * Math.PI * 42}`}
                   strokeDashoffset={`${2 * Math.PI * 42 * (1 - finalPercentile / 100)}`}
                   strokeLinecap="round"
+                  style={{stroke: 'url(#percentile-gradient)'}}
                 />
+                <defs>
+                  <linearGradient id="percentile-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#8b5cf6" />
+                    <stop offset="50%" stopColor="#d946ef" />
+                    <stop offset="100%" stopColor="#06b6d4" />
+                  </linearGradient>
+                </defs>
               </svg>
               <div className="absolute flex flex-col items-center">
-                <span className="text-5xl font-extrabold font-outfit text-white leading-none">
+                <span className="text-5xl font-extrabold font-outfit shimmer-text leading-none">
                   {finalPercentile}
                 </span>
                 <span className="text-[10px] font-semibold text-accent font-mono mt-2 uppercase tracking-wider">
@@ -255,15 +267,15 @@ export default function EmployerCandidateReportPage() {
         {/* Right Side: Detailed Metric breakdown */}
         <div className="lg:col-span-8 flex flex-col gap-6">
           <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-accent" />
-            <h2 className="text-lg font-bold font-outfit text-white">Chamber Assessment Breakdown</h2>
+            <Activity className="w-5 h-5 text-violet-400" />
+            <h2 className="text-lg font-bold font-outfit shimmer-text">Chamber Assessment Breakdown</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {metricsBreakdown.map((item, idx) => (
               <div
                 key={idx}
-                className="glass-card p-6 rounded-2xl border border-white/5 shadow-md flex flex-col justify-between gap-4"
+                className="vibrant-card p-6 rounded-2xl shadow-md flex flex-col justify-between gap-4"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex flex-col gap-2">
@@ -292,7 +304,7 @@ export default function EmployerCandidateReportPage() {
           </div>
 
           {/* Calibrated details metrics details summary log */}
-          <div className="glass-card p-6 rounded-3xl border border-white/5 shadow-xl flex flex-col gap-4 mt-2">
+          <div className="vibrant-card p-6 rounded-3xl shadow-xl flex flex-col gap-4 mt-2 rainbow-top-line">
             <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
               <Globe className="w-4 h-4 text-accent" />
               Bias calibration summary

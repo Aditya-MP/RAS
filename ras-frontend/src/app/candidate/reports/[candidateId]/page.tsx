@@ -145,21 +145,25 @@ export default function CandidateReportPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050814] text-slate-100 flex flex-col relative">
+    <div className="min-h-screen bg-[#050814] text-slate-100 flex flex-col relative overflow-x-hidden">
       <div className="grid-bg absolute inset-0 opacity-5 pointer-events-none z-0" />
+      <div className="absolute top-10 right-1/4 w-[500px] h-[500px] bg-violet-900/12 rounded-full blur-3xl pointer-events-none z-0 animate-float-orb" />
+      <div className="absolute bottom-20 left-20 w-[400px] h-[400px] bg-fuchsia-900/8 rounded-full blur-3xl pointer-events-none z-0 animate-float-orb" style={{animationDelay: '3s'}} />
 
       {/* Header */}
-      <header className="px-8 py-5 border-b border-white/5 bg-slate-950/40 backdrop-blur-md relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link href="/candidate/dashboard" className="p-2 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white mr-2 transition-all">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
-            R
+      <header className="border-b border-white/5 bg-slate-950/40 backdrop-blur-md relative z-10 shrink-0">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between h-16 w-full">
+          <div className="flex items-center gap-2">
+            <Link href="/candidate/dashboard" className="p-2 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white mr-2 transition-all">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
+              R
+            </div>
+            <span className="font-extrabold font-outfit text-white text-base">
+              Redrob <span className="text-accent">Sandbox</span>
+            </span>
           </div>
-          <span className="font-extrabold font-outfit text-white text-base">
-            Redrob <span className="text-accent">Sandbox</span>
-          </span>
         </div>
       </header>
 
@@ -168,7 +172,7 @@ export default function CandidateReportPage() {
         
         {/* Left Side: Score Summary dial */}
         <div className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-8">
-          <div className="glass-card p-8 rounded-3xl border border-white/5 shadow-2xl flex flex-col items-center text-center gap-6">
+          <div className="vibrant-card p-8 rounded-3xl shadow-2xl flex flex-col items-center text-center gap-6 rainbow-top-line">
             <h2 className="text-xs font-bold font-mono text-slate-400 uppercase tracking-widest leading-none">
               Evaluation Percentile
             </h2>
@@ -187,18 +191,26 @@ export default function CandidateReportPage() {
                   cx="50"
                   cy="50"
                   r="42"
-                  className="stroke-accent fill-none transition-all duration-1000 ease-out"
+                  className="fill-none transition-all duration-1000 ease-out"
                   strokeWidth="8"
                   strokeDasharray={`${2 * Math.PI * 42}`}
                   strokeDashoffset={`${2 * Math.PI * 42 * (1 - finalPercentile / 100)}`}
                   strokeLinecap="round"
+                  style={{stroke: 'url(#cand-percentile-gradient)'}}
                 />
+                <defs>
+                  <linearGradient id="cand-percentile-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#8b5cf6" />
+                    <stop offset="50%" stopColor="#d946ef" />
+                    <stop offset="100%" stopColor="#06b6d4" />
+                  </linearGradient>
+                </defs>
               </svg>
               <div className="absolute flex flex-col items-center">
-                <span className="text-5xl font-extrabold font-outfit text-white leading-none">
+                <span className="text-5xl font-extrabold font-outfit shimmer-text leading-none">
                   {finalPercentile}
                 </span>
-                <span className="text-[10px] font-semibold text-accent font-mono mt-2 uppercase tracking-wider">
+                <span className="text-[10px] font-semibold text-violet-400 font-mono mt-2 uppercase tracking-wider">
                   Percentile
                 </span>
               </div>
@@ -219,15 +231,15 @@ export default function CandidateReportPage() {
         {/* Right Side: Detailed Metric breakdown */}
         <div className="lg:col-span-8 flex flex-col gap-6">
           <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-accent" />
-            <h2 className="text-lg font-bold font-outfit text-white">Chamber Assessment Breakdown</h2>
+            <Activity className="w-5 h-5 text-violet-400" />
+            <h2 className="text-lg font-bold font-outfit shimmer-text">Chamber Assessment Breakdown</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {metricsBreakdown.map((item, idx) => (
               <div
                 key={idx}
-                className="glass-card p-6 rounded-2xl border border-white/5 shadow-md flex flex-col justify-between gap-4"
+                className="vibrant-card p-6 rounded-2xl shadow-md flex flex-col justify-between gap-4"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex flex-col gap-2">

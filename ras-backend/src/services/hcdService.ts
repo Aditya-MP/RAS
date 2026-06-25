@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../config/supabase';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string; numpages: number }>;
+const _pdfParseModule = require('pdf-parse');
+const pdfParse = (typeof _pdfParseModule === 'function' ? _pdfParseModule : _pdfParseModule.default) as (buffer: Buffer) => Promise<{ text: string; numpages: number }>;
 
 const SUSPICIOUS_PATTERNS = [
   /system\s*instruction/i,

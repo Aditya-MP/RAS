@@ -271,21 +271,26 @@ export default function TeamsManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050814] text-slate-100 flex flex-col relative">
+    <div className="min-h-screen bg-[#050814] text-slate-100 flex flex-col relative overflow-x-hidden">
       <div className="grid-bg absolute inset-0 opacity-5 pointer-events-none z-0" />
+      {/* Floating Background Orbs */}
+      <div className="absolute top-10 right-1/4 w-[500px] h-[500px] bg-violet-900/12 rounded-full blur-3xl pointer-events-none z-0 animate-float-orb" />
+      <div className="absolute bottom-20 left-20 w-[400px] h-[400px] bg-cyan-900/8 rounded-full blur-3xl pointer-events-none z-0 animate-float-orb" style={{animationDelay: '3s'}} />
 
       {/* Header */}
-      <header className="px-8 py-5 border-b border-white/5 bg-slate-950/40 backdrop-blur-md relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link href="/employer/dashboard" className="p-2 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white mr-2 transition-all">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
-            R
+      <header className="border-b border-white/5 bg-slate-950/40 backdrop-blur-md relative z-10 shrink-0">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between h-16 w-full">
+          <div className="flex items-center gap-2">
+            <Link href="/employer/dashboard" className="p-2 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white mr-2 transition-all">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
+              R
+            </div>
+            <span className="font-extrabold font-outfit text-white text-base">
+              Redrob <span className="text-accent">Sandbox</span>
+            </span>
           </div>
-          <span className="font-extrabold font-outfit text-white text-base">
-            Redrob <span className="text-accent">Sandbox</span>
-          </span>
         </div>
       </header>
 
@@ -304,7 +309,7 @@ export default function TeamsManagementPage() {
 
             <button
               onClick={() => setShowCreateModal(true)}
-              className="py-2 px-3 bg-accent hover:bg-accent-hover text-black font-bold font-outfit text-xs rounded-lg transition-all flex items-center gap-1 shadow-md shadow-accent/15 cursor-pointer"
+              className="py-2 px-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold font-outfit text-xs rounded-lg transition-all flex items-center gap-1.5 shadow-lg shadow-violet-600/20 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               New Sandbox
@@ -313,7 +318,7 @@ export default function TeamsManagementPage() {
 
           <div className="flex flex-col gap-4">
             {teams.length === 0 ? (
-              <div className="glass-card p-8 rounded-3xl border border-white/5 text-center flex flex-col items-center justify-center gap-3">
+              <div className="vibrant-card p-8 rounded-3xl text-center flex flex-col items-center justify-center gap-3">
                 <Users className="w-8 h-8 text-slate-600" />
                 <p className="text-xs text-slate-500">No teams assigned. Select candidates and launch a new sandbox team.</p>
               </div>
@@ -322,10 +327,10 @@ export default function TeamsManagementPage() {
                 <div
                   key={team.id}
                   onClick={() => setActiveTeam(team)}
-                  className={`glass-card p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-4 ${
+                  className={`vibrant-card p-5 rounded-2xl transition-all cursor-pointer flex flex-col justify-between gap-4 ${
                     activeTeam?.id === team.id
-                      ? "border-accent bg-accent/[0.02]"
-                      : "border-white/5 hover:border-white/10"
+                      ? "!border-violet-500/30 !shadow-[0_0_30px_rgba(139,92,246,0.1)] animate-border-glow"
+                      : ""
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -415,7 +420,7 @@ export default function TeamsManagementPage() {
         {/* Right Side: Active Control Dashboard */}
         <div className="lg:col-span-7 flex flex-col gap-6">
           {!activeTeam ? (
-            <div className="h-full min-h-[450px] flex flex-col items-center justify-center text-center p-8 glass-card rounded-3xl border border-white/5 gap-3">
+            <div className="h-full min-h-[450px] flex flex-col items-center justify-center text-center p-8 vibrant-card rounded-3xl gap-3">
               <Terminal className="w-12 h-12 text-slate-700" />
               <h3 className="text-md font-bold text-slate-400">Select a sandbox chamber</h3>
               <p className="text-xs text-slate-600 max-w-xs">Click on any created assessment team in the list to manage and review active telemetry operations.</p>
@@ -431,12 +436,12 @@ export default function TeamsManagementPage() {
               )}
 
               {/* Dynamic telemetry status control board */}
-              <div className="glass-card p-6 rounded-3xl border border-white/5 flex flex-col gap-6 shadow-xl">
+              <div className="vibrant-card p-6 rounded-3xl flex flex-col gap-6 shadow-xl rainbow-top-line">
                 <div className="flex items-center justify-between border-b border-white/5 pb-4">
                   <div>
                     <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest leading-none">Control Console</span>
                     <h2 className="text-md font-bold text-white font-outfit mt-1">
-                      Chamber UUID: <span className="text-accent">{activeTeam.id}</span>
+                      Chamber UUID: <span className="shimmer-text">{activeTeam.id}</span>
                     </h2>
                   </div>
                   <div className="flex items-center gap-2">
@@ -456,7 +461,7 @@ export default function TeamsManagementPage() {
                     {activeTeam.members.map((m, idx) => (
                       <div
                         key={idx}
-                        className="p-4 bg-slate-950/40 border border-white/5 rounded-2xl flex items-center justify-between"
+                        className="p-4 stat-card-violet rounded-2xl flex items-center justify-between transition-all duration-300"
                       >
                         <div className="flex flex-col text-left">
                           <span className="text-sm font-bold text-white font-outfit">{m.candidate?.full_name}</span>
@@ -467,7 +472,7 @@ export default function TeamsManagementPage() {
                           <div className="flex items-center gap-2">
                             <Link
                               href={`/employer/reports/${m.candidate?.id}`}
-                              className="py-1.5 px-3 bg-accent hover:bg-accent-hover text-black font-bold font-outfit text-[11px] rounded-lg transition-all flex items-center gap-1 shadow-md shadow-accent/10"
+                              className="py-1.5 px-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold font-outfit text-[11px] rounded-lg transition-all flex items-center gap-1 shadow-md shadow-violet-600/15"
                             >
                               <Award className="w-3.5 h-3.5" />
                               View Report
@@ -484,7 +489,7 @@ export default function TeamsManagementPage() {
 
               {/* Chaos Injection Center */}
               {activeTeam.status === "active" && (
-                <div className="glass-card p-6 rounded-3xl border border-white/5 shadow-xl flex flex-col gap-5">
+                <div className="vibrant-card p-6 rounded-3xl shadow-xl flex flex-col gap-5 animate-border-glow">
                   <h2 className="text-md font-bold font-outfit text-white uppercase tracking-wider flex items-center gap-2">
                     <Zap className="w-4.5 h-4.5 text-amber-400" />
                     Chaos Injection Center

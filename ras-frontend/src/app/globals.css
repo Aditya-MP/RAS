@@ -153,3 +153,325 @@ body {
   animation: spin-slow 20s linear infinite;
 }
 
+/* ═══════════════════════════════════════════════════
+   VIBRANT DASHBOARD UTILITIES
+   ═══════════════════════════════════════════════════ */
+
+/* Gradient Stat Cards */
+.stat-card-violet {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+.stat-card-violet:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.12), inset 0 1px 0 rgba(139, 92, 246, 0.1);
+}
+
+.stat-card-cyan {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(34, 211, 238, 0.03) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+}
+.stat-card-cyan:hover {
+  border-color: rgba(6, 182, 212, 0.35);
+  box-shadow: 0 8px 30px rgba(6, 182, 212, 0.12), inset 0 1px 0 rgba(6, 182, 212, 0.1);
+}
+
+.stat-card-amber {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(252, 211, 77, 0.03) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+.stat-card-amber:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 8px 30px rgba(245, 158, 11, 0.12), inset 0 1px 0 rgba(245, 158, 11, 0.1);
+}
+
+.stat-card-emerald {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(52, 211, 153, 0.03) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+.stat-card-emerald:hover {
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.12), inset 0 1px 0 rgba(16, 185, 129, 0.1);
+}
+
+.stat-card-rose {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(251, 113, 133, 0.03) 100%);
+  border: 1px solid rgba(244, 63, 94, 0.15);
+}
+.stat-card-rose:hover {
+  border-color: rgba(244, 63, 94, 0.35);
+  box-shadow: 0 8px 30px rgba(244, 63, 94, 0.12), inset 0 1px 0 rgba(244, 63, 94, 0.1);
+}
+
+/* Welcome Banner Gradient */
+.welcome-banner {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.06) 0%, rgba(217, 70, 239, 0.04) 40%, rgba(6, 182, 212, 0.04) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.4), rgba(217, 70, 239, 0.3), rgba(6, 182, 212, 0.4), transparent);
+}
+
+/* Animated Gradient Border */
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(139, 92, 246, 0.2); }
+  33% { border-color: rgba(217, 70, 239, 0.25); }
+  66% { border-color: rgba(6, 182, 212, 0.2); }
+}
+
+.animate-border-glow {
+  animation: border-glow 4s ease-in-out infinite;
+}
+
+/* Shimmer Effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, #f8fafc 0%, #c084fc 25%, #22d3ee 50%, #a3e635 75%, #f8fafc 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Vibrant Glass Card (replaces monotone glass for dashboards) */
+.vibrant-card {
+  background: linear-gradient(160deg, rgba(15, 20, 40, 0.65) 0%, rgba(10, 15, 29, 0.5) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vibrant-card:hover {
+  border-color: rgba(139, 92, 246, 0.2);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.08), 0 4px 15px rgba(6, 182, 212, 0.05);
+  transform: translateY(-2px);
+}
+
+/* Neon glow accents for text */
+.neon-text-fuchsia {
+  text-shadow: 0 0 15px rgba(217, 70, 239, 0.5);
+}
+
+.neon-text-cyan {
+  text-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
+}
+
+.neon-text-violet {
+  text-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+}
+
+/* Rainbow top-line accent for sections */
+.rainbow-top-line {
+  position: relative;
+}
+.rainbow-top-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #8b5cf6, #d946ef, #06b6d4, #84cc16);
+  border-radius: 2px 2px 0 0;
+  opacity: 0.7;
+}
+
+/* Floating Orb Background */
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(10px, -15px) scale(1.05); }
+  50% { transform: translate(-5px, 10px) scale(0.95); }
+  75% { transform: translate(15px, 5px) scale(1.02); }
+}
+
+.animate-float-orb {
+  animation: float-orb 8s ease-in-out infinite;
+}
+
+/* Colorful sidebar active state */
+.sidebar-active {
+  background: linear-gradient(90deg, rgba(217, 70, 239, 0.1), rgba(139, 92, 246, 0.05));
+  border: 1px solid rgba(217, 70, 239, 0.2);
+}
+
+/* Employer accent gradient card */
+.employer-accent-card {
+  background: linear-gradient(135deg, rgba(132, 204, 22, 0.06) 0%, rgba(6, 182, 212, 0.04) 100%);
+  border: 1px solid rgba(132, 204, 22, 0.12);
+}
+.employer-accent-card:hover {
+  border-color: rgba(132, 204, 22, 0.3);
+  box-shadow: 0 12px 40px rgba(132, 204, 22, 0.08);
+  transform: translateY(-3px);
+}
+
+/* ═══════════════════════════════════════════════════
+   BENTO BOX PLATFORM STYLES & GLOWS
+   ═══════════════════════════════════════════════════ */
+
+/* Bento Container */
+.bento-container {
+  display: grid;
+  gap: 1.25rem;
+}
+
+/* Bento Cell */
+.bento-cell {
+  background: rgba(8, 12, 25, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1.25rem; /* rounded-2xl style */
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Subtle accent highlight on bento cells */
+.bento-cell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1.25rem;
+  padding: 1px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.bento-cell:hover {
+  transform: translateY(-3px) scale(1.008);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(139, 92, 246, 0.08);
+}
+
+/* Specific accent colored cells */
+.bento-cell-violet:hover {
+  border-color: rgba(139, 92, 246, 0.45);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 25px rgba(139, 92, 246, 0.15);
+}
+
+.bento-cell-fuchsia:hover {
+  border-color: rgba(217, 70, 239, 0.45);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 25px rgba(217, 70, 239, 0.15);
+}
+
+.bento-cell-lime:hover {
+  border-color: rgba(132, 204, 22, 0.45);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 25px rgba(132, 204, 22, 0.15);
+}
+
+.bento-cell-cyan:hover {
+  border-color: rgba(6, 182, 212, 0.45);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 25px rgba(6, 182, 212, 0.15);
+}
+
+/* Linear-inspired Glowing Grid Lines */
+.linear-grid {
+  background-size: 50px 50px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+}
+
+/* Glowing Neon Charts */
+.glow-path-lime {
+  filter: drop-shadow(0 0 8px rgba(132, 204, 22, 0.6));
+}
+.glow-path-fuchsia {
+  filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.6));
+}
+.glow-path-violet {
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));
+}
+.glow-path-cyan {
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
+}
+
+/* High Contrast Headings */
+.bento-title {
+  font-family: var(--font-outfit);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #F8FAFC;
+}
+.bento-subtitle {
+  font-family: var(--font-sans);
+  color: #94A3B8;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+/* ═══════════════════════════════════════════════════
+   PAYROUTE STYLE DEFINITIONS
+   ═══════════════════════════════════════════════════ */
+
+/* Solid, Softly Rounded Dark Containers (No Outlines/Borders) */
+.payroute-card {
+  background: #090a0f;
+  border-radius: 1.5rem; /* Softly rounded 24px */
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 35px -10px rgba(0, 0, 0, 0.6);
+  border: none !important; /* Force replace outlines */
+  outline: none !important;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.payroute-card:hover {
+  transform: translateY(-2px);
+  background: #0d0f17;
+  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(249, 115, 22, 0.1);
+}
+
+/* Vibrant High-Contrast Orange Glows */
+.neon-text-orange {
+  text-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
+}
+
+.glow-path-orange {
+  filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.65));
+}
+
+/* PayRoute Active Navigation/Sidebar State */
+.payroute-active {
+  background: rgba(249, 115, 22, 0.1) !important;
+  color: #f97316 !important;
+  border: none !important;
+  font-weight: 800;
+}
+
+.payroute-active svg {
+  color: #f97316 !important;
+}
+
+/* Orange status bars */
+.payroute-progress-fill {
+  background: linear-gradient(90deg, #ea580c, #f97316);
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
+}
+
+

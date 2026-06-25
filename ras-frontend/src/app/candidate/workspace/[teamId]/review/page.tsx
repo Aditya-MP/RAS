@@ -173,18 +173,20 @@ export default function PeerReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050814] text-slate-100 flex flex-col relative">
+    <div className="min-h-screen bg-[#050814] text-slate-100 flex flex-col relative overflow-x-hidden">
       <div className="grid-bg absolute inset-0 opacity-5 pointer-events-none z-0" />
 
       {/* Header */}
-      <header className="px-8 py-5 border-b border-white/5 bg-slate-950/40 backdrop-blur-md relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
-            R
+      <header className="border-b border-white/5 bg-slate-950/40 backdrop-blur-md relative z-10 shrink-0">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between h-16 w-full">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
+              R
+            </div>
+            <span className="font-extrabold font-outfit text-white text-base">
+              Redrob <span className="text-accent">Sandbox</span>
+            </span>
           </div>
-          <span className="font-extrabold font-outfit text-white text-base">
-            Redrob <span className="text-accent">Sandbox</span>
-          </span>
         </div>
       </header>
 

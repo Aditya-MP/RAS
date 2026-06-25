@@ -57,35 +57,39 @@ export default function NewAssessmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050814] text-slate-100 flex flex-col relative">
+    <div className="min-h-screen bg-[#050814] text-slate-100 flex flex-col relative overflow-x-hidden">
       <div className="grid-bg absolute inset-0 opacity-5 pointer-events-none z-0" />
+      <div className="absolute top-20 left-1/3 w-[500px] h-[500px] bg-violet-900/12 rounded-full blur-3xl pointer-events-none z-0 animate-float-orb" />
+      <div className="absolute bottom-10 right-1/4 w-[400px] h-[400px] bg-fuchsia-900/8 rounded-full blur-3xl pointer-events-none z-0 animate-float-orb" style={{animationDelay: '3s'}} />
 
       {/* Header */}
-      <header className="px-8 py-5 border-b border-white/5 bg-slate-950/40 backdrop-blur-md relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link href="/employer/dashboard" className="p-2 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white mr-2 transition-all">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
-            R
+      <header className="border-b border-white/5 bg-slate-950/40 backdrop-blur-md relative z-10 shrink-0">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between h-16 w-full">
+          <div className="flex items-center gap-2">
+            <Link href="/employer/dashboard" className="p-2 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white mr-2 transition-all">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
+              R
+            </div>
+            <span className="font-extrabold font-outfit text-white text-base">
+              Redrob <span className="text-accent">Sandbox</span>
+            </span>
           </div>
-          <span className="font-extrabold font-outfit text-white text-base">
-            Redrob <span className="text-accent">Sandbox</span>
-          </span>
         </div>
       </header>
 
       {/* Content Container */}
       <main className="flex-1 max-w-[90%] lg:max-w-[1300px] w-full mx-auto px-6 py-12 relative z-10">
-        <div className="glass-card p-8 sm:p-10 rounded-3xl border border-white/5 shadow-2xl flex flex-col gap-8">
+        <div className="vibrant-card p-8 sm:p-10 rounded-3xl shadow-2xl flex flex-col gap-8 rainbow-top-line">
           
           <div>
-            <span className="text-[10px] font-mono font-bold bg-accent/10 border border-accent/20 px-2.5 py-1 rounded text-accent uppercase tracking-widest">
+            <span className="text-[10px] font-mono font-bold bg-violet-500/10 border border-violet-500/20 px-2.5 py-1 rounded text-violet-400 uppercase tracking-widest">
               AI Skill Extraction
             </span>
             <h1 className="text-2xl font-bold font-outfit text-white mt-4 mb-2 flex items-center gap-2">
-              <FileText className="w-6 h-6 text-accent" />
-              Create Assessment Challenge
+              <FileText className="w-6 h-6 text-violet-400" />
+              <span className="shimmer-text">Create Assessment Challenge</span>
             </h1>
             <p className="text-xs text-slate-400 leading-relaxed font-sans">
               Define the requirements and paste the Job Description. The Ambient Tech Lead parses the description to extract target skills using Gemini AI automatically.
@@ -113,7 +117,7 @@ export default function NewAssessmentPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Senior Python System Architect"
-                  className="w-full px-4 py-3 bg-slate-950/50 border border-white/5 focus:border-accent/40 rounded-2xl text-white placeholder-slate-600 focus:outline-none transition-all font-sans text-sm"
+                  className="w-full px-4 py-3 bg-slate-950/50 border border-white/5 focus:border-violet-500/40 rounded-2xl text-white placeholder-slate-600 focus:outline-none transition-all font-sans text-sm"
                 />
               </div>
 
@@ -130,7 +134,7 @@ export default function NewAssessmentPage() {
                   value={maxCandidates}
                   onChange={(e) => setMaxCandidates(parseInt(e.target.value) || 5)}
                   placeholder="5"
-                  className="w-full px-4 py-3 bg-slate-950/50 border border-white/5 focus:border-accent/40 rounded-2xl text-white placeholder-slate-600 focus:outline-none transition-all font-mono text-sm"
+                  className="w-full px-4 py-3 bg-slate-950/50 border border-white/5 focus:border-violet-500/40 rounded-2xl text-white placeholder-slate-600 focus:outline-none transition-all font-mono text-sm"
                 />
               </div>
             </div>
@@ -144,7 +148,7 @@ export default function NewAssessmentPage() {
                 <select
                   value={seniorityLevel}
                   onChange={(e) => setSeniorityLevel(e.target.value as any)}
-                  className="w-full px-4 py-3 bg-slate-950/50 border border-white/5 focus:border-accent/40 rounded-2xl text-white focus:outline-none transition-all font-sans text-sm cursor-pointer"
+                  className="w-full px-4 py-3 bg-slate-950/50 border border-white/5 focus:border-violet-500/40 rounded-2xl text-white focus:outline-none transition-all font-sans text-sm cursor-pointer"
                 >
                   <option value="junior">Junior</option>
                   <option value="mid">Mid-level</option>
@@ -160,7 +164,7 @@ export default function NewAssessmentPage() {
                 <select
                   value={techTrack}
                   onChange={(e) => setTechTrack(e.target.value as any)}
-                  className="w-full px-4 py-3 bg-slate-950/50 border border-white/5 focus:border-accent/40 rounded-2xl text-white focus:outline-none transition-all font-sans text-sm cursor-pointer"
+                  className="w-full px-4 py-3 bg-slate-950/50 border border-white/5 focus:border-violet-500/40 rounded-2xl text-white focus:outline-none transition-all font-sans text-sm cursor-pointer"
                 >
                   <option value="frontend">Frontend Engineering</option>
                   <option value="backend">Backend Engineering</option>
@@ -180,7 +184,7 @@ export default function NewAssessmentPage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="E.g., Collaborative API sandbox parsing high-volume logs."
-                className="w-full px-4 py-3 bg-slate-950/50 border border-white/5 focus:border-accent/40 rounded-2xl text-white placeholder-slate-600 focus:outline-none transition-all font-sans text-sm"
+                className="w-full px-4 py-3 bg-slate-950/50 border border-white/5 focus:border-violet-500/40 rounded-2xl text-white placeholder-slate-600 focus:outline-none transition-all font-sans text-sm"
               />
             </div>
 
@@ -195,7 +199,7 @@ export default function NewAssessmentPage() {
                 value={jdText}
                 onChange={(e) => setJdText(e.target.value)}
                 placeholder="Paste the full job specification details here. Technical keywords (React, Django, Kafka, Redis) are parsed to structure sandbox test suites..."
-                className="w-full px-4 py-3.5 bg-slate-950/50 border border-white/5 focus:border-accent/40 rounded-2xl text-white placeholder-slate-600 focus:outline-none transition-all font-sans text-xs resize-none leading-relaxed"
+                className="w-full px-4 py-3.5 bg-slate-950/50 border border-white/5 focus:border-violet-500/40 rounded-2xl text-white placeholder-slate-600 focus:outline-none transition-all font-sans text-xs resize-none leading-relaxed"
               />
             </div>
 
@@ -203,7 +207,7 @@ export default function NewAssessmentPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 py-4 bg-accent hover:bg-accent-hover text-black font-extrabold font-outfit rounded-2xl transition-all shadow-lg shadow-accent/20 hover:shadow-accent/35 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="w-full mt-4 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-extrabold font-outfit rounded-2xl transition-all shadow-lg shadow-violet-600/20 hover:shadow-violet-500/35 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
             >
               {loading ? (
                 <>

@@ -1,0 +1,12 @@
+{
+  "name": "ras",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail=false --prefix-colors \"cyan,magenta\" --names \"backend,frontend\" \"npm run dev --prefix ras-backend\" \"npm run dev --prefix ras-frontend\"",
+    "install:all": "npm install --prefix ras-backend && npm install --prefix ras-frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
