@@ -144,6 +144,7 @@ export default function CandidateWorkspacePage() {
   const [setupLogs, setSetupLogs] = useState<string[]>([]);
   const [showSetupOverlay, setShowSetupOverlay] = useState(false);
   const [testStarted, setTestStarted] = useState(false);
+  const [teamDetails, setTeamDetails] = useState<any>(null);
 
   const handleStartTest = () => {
     if (isElectron) {
@@ -202,6 +203,13 @@ export default function CandidateWorkspacePage() {
   // Fetch initial snapshots, chat, and chaos events
   const loadWorkspaceDetails = useCallback(async () => {
     try {
+      // 0. Get team details
+      const teamRes = await apiFetch(`/api/teams/${teamId}`);
+      if (teamRes.ok) {
+        const teamData = await teamRes.json();
+        setTeamDetails(teamData.team || null);
+      }
+
       // 1. Get latest snapshot files
       const snapshotRes = await apiFetch(`/api/snapshots/team/${teamId}`);
       if (snapshotRes.ok) {
@@ -739,6 +747,39 @@ export default function CandidateWorkspacePage() {
     }
   };
 
+  const getInstructionsMarkdown = () => {
+    // 1. Check if README.md exists in files
+    const readmeKey = Object.keys(files).find(k => k.toLowerCase() === 'readme.md' || k.toLowerCase() === 'readme');
+    if (readmeKey && files[readmeKey]) {
+      return files[readmeKey];
+    }
+
+    // 2. Fallback to team details
+    if (teamDetails && teamDetails.assessment) {
+      const { title, tech_track, seniority_level, description, jd_text } = teamDetails.assessment;
+      return `# Coding Assessment: ${title || "Technical Challenge"}
+
+**Position Level**: ${seniority_level || "Mid"}
+**Technology Track**: ${tech_track || "Fullstack"}
+
+---
+
+## Challenge Description
+${description || "Please implement a solution for the technical requirements described below."}
+
+## Job Role Context
+${jd_text || "Collaborate with your team to solve this ticket using your local development environment."}
+`;
+    }
+
+    // 3. Last resort static fallback
+    return `# Coding Challenge
+
+No workspace files or instructions found.
+Please collaborate with your teammates to understand the task or notify the administrator.
+`;
+  };
+
   return (
     <div className="min-h-screen bg-[#02040a] text-slate-100 flex flex-col h-screen overflow-hidden overflow-x-hidden">
       
@@ -870,7 +911,7 @@ export default function CandidateWorkspacePage() {
           {/* Instructions Scrollable Container */}
           <div className="flex-1 overflow-y-auto p-6 font-sans text-xs text-slate-300 leading-relaxed select-text space-y-4 border-b border-white/5">
             <div className="prose prose-invert max-w-none text-left whitespace-pre-wrap selection:bg-accent selection:text-black">
-              {files["README.md"] || "# Instructions\nNo instructions loaded. Check with your team."}
+              {getInstructionsMarkdown()}
             </div>
           </div>
 
