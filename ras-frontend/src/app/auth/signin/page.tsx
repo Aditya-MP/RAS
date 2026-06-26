@@ -36,10 +36,10 @@ export default function SignInPage() {
         <div className="flex flex-col items-center text-center gap-2">
           <Link href="/" className="flex items-center gap-2 mb-2 group">
             <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center font-bold text-black font-outfit shadow-lg shadow-accent/20 group-hover:scale-105 transition-transform">
-              R
+              H
             </div>
             <span className="font-extrabold font-outfit text-white tracking-tight text-xl">
-              Redrob <span className="text-accent">Sandbox</span>
+              AI <span className="text-accent">HireHub</span>
             </span>
           </Link>
           <h1 className="text-2xl font-bold font-outfit text-white">Welcome back</h1>
@@ -106,7 +106,7 @@ export default function SignInPage() {
         </form>
 
         <div className="text-center text-xs text-slate-500">
-          New to Redrob Sandbox?{" "}
+          New to AI HireHub?{" "}
           <Link href="/auth/signup" className="text-accent hover:underline font-semibold ml-1">
             Register Account
           </Link>

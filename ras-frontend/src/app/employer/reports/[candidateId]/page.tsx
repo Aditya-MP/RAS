@@ -179,10 +179,10 @@ export default function EmployerCandidateReportPage() {
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
-              R
+              H
             </div>
             <span className="font-extrabold font-outfit text-white text-base">
-              Redrob <span className="text-accent">Sandbox</span>
+              AI <span className="text-accent">HireHub</span>
             </span>
           </div>
         </div>

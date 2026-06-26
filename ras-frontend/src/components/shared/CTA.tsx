@@ -52,7 +52,7 @@ export default function CTA() {
         <div className="mt-32 pt-12 border-t border-white/5 grid grid-cols-1 md:grid-cols-4 gap-12 text-slate-400">
           <div className="flex flex-col gap-4">
             <span className="text-lg font-bold font-outfit text-white">
-              Redrob <span className="text-accent">Sandbox</span>
+              AI <span className="text-accent">HireHub</span>
             </span>
             <p className="text-xs leading-relaxed max-w-xs text-slate-400 font-sans">
               Futuristic recruitment reimagined. The ambient platform that identifies hidden engineering talents through multiplayer developer sandboxes.
@@ -94,7 +94,7 @@ export default function CTA() {
         </div>
 
         <div className="mt-16 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-mono">
-          <span>&copy; {new Date().getFullYear()} Redrob Sandbox Inc. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} AI HireHub Inc. All rights reserved.</span>
           <div className="flex gap-6">
             <a href="#" className="hover:text-slate-400 transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-slate-400 transition-colors">Terms of Service</a>

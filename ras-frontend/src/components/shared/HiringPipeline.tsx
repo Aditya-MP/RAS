@@ -55,7 +55,7 @@ export default function HiringPipeline() {
             Functional Stream
           </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold font-outfit text-white tracking-tight">
-            How The Redrob Evaluation Funnel Works
+            How The AI HireHub Funnel Works
           </h2>
           <p className="text-slate-400 leading-relaxed font-sans">
             From resume upload to final placement: a fully automated, integrity-locked candidate mapping system.

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '../config/supabase';
+import logger from '../utils/logger';
 
 // Event class enum for validation
 export const EVENT_CLASSES = [
@@ -54,7 +55,7 @@ export const ingestEvents = async (
     .select();
 
   if (error) {
-    console.error('Telemetry insert error:', error);
+    logger.error('Telemetry insert error:', error);
     throw new Error(`Failed to insert telemetry: ${error.message}`);
   }
 

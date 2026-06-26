@@ -16,14 +16,25 @@ import peerReviewRoutes from './routes/peerReview';
 import chaosRoutes from './routes/chaos';
 import gitAnalysisRoutes from './routes/gitAnalysis';
 import hcdRoutes from './routes/hcd';
+import jobRoutes from './routes/jobs';
+import notificationRoutes from './routes/notifications';
+import terminalRoutes from './routes/terminal';
 import { setupWebSocketServer } from './services/websocketService';
+import { startJobExpiryScheduler } from './services/orchestratorService';
+import { challengeSearch } from './services/vectorSearch';
 import logger from './utils/logger';
 
 const app = express();
 const port = process.env.PORT || 5000;
+const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
 
-app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || '*' }));
+app.use(cors({
+  origin: [clientUrl, 'http://localhost:3000', 'http://127.0.0.1:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(express.json({ limit: '10mb' }));
 
 // Health check
@@ -43,8 +54,15 @@ app.use('/api/peerreview', peerReviewRoutes);
 app.use('/api/chaos', chaosRoutes);
 app.use('/api/git', gitAnalysisRoutes);
 app.use('/api/resume', hcdRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/terminal', terminalRoutes);
 
 const server = http.createServer(app);
 setupWebSocketServer(server);
 
-server.listen(port, () => logger.info(`Server running on port ${port}`));
+server.listen(port, () => {
+  logger.info(`Server running on port ${port}`);
+  challengeSearch.initialize();
+  startJobExpiryScheduler();
+});

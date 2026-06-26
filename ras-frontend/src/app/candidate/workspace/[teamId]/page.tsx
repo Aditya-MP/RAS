@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/components/shared/AuthContext";
 import { useParams, useRouter } from "next/navigation";
+import Editor from "@monaco-editor/react";
+
 import Link from "next/link";
 import {
   Folder,
@@ -57,7 +59,7 @@ export default function CandidateWorkspacePage() {
   const [files, setFiles] = useState<CodeFiles>({
     "index.js": "// Write your collaborative solutions here\nfunction main() {\n  console.log('Sandbox initialized');\n}\nmain();\n",
     "utils.js": "// Helper functions\nexport function add(a, b) {\n  return a + b;\n}",
-    "README.md": "# Redrob Collaborative Sandbox Challenge\nWrite a clean solution and verify code execution."
+    "README.md": "# AI HireHub Challenge\nWrite a clean solution and verify code execution."
   });
   const [activeFile, setActiveFile] = useState("index.js");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("javascript");
@@ -97,7 +99,7 @@ export default function CandidateWorkspacePage() {
       setFiles((prev) => {
         const newFiles: CodeFiles = {
           [boilerplate.filename]: boilerplate.content,
-          "README.md": prev["README.md"] || "# Redrob Collaborative Sandbox Challenge\nWrite a clean solution and verify code execution."
+          "README.md": prev["README.md"] || "# AI HireHub Challenge\nWrite a clean solution and verify code execution."
         };
         if (lang === "javascript") {
           newFiles["utils.js"] = "// Helper functions\nexport function add(a, b) {\n  return a + b;\n}";
@@ -111,7 +113,8 @@ export default function CandidateWorkspacePage() {
   };
 
   // Terminal State
-  const [terminalOutput, setTerminalOutput] = useState<string>("sandbox@redrob:~$ \nSystem initialized. Select a file and click 'Run Code' above.\n");
+  const [terminalOutput, setTerminalOutput] = useState<string>("sandbox@hirehub:~$ \nSystem initialized. Type 'help' for commands or click 'Run Code'.\n");
+  const [terminalInput, setTerminalInput] = useState("");
   const [runningCode, setRunningCode] = useState(false);
 
   // Sidebar Tabs: "chat" | "ai" | "chaos"
@@ -135,22 +138,61 @@ export default function CandidateWorkspacePage() {
   const [socketConnected, setSocketConnected] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
 
+  // Electron OS Agent Telemetry States
+  const [isElectron, setIsElectron] = useState(false);
+  const [agentStatus, setAgentStatus] = useState<string>("idle");
+  const [setupLogs, setSetupLogs] = useState<string[]>([]);
+  const [showSetupOverlay, setShowSetupOverlay] = useState(false);
+  const [testStarted, setTestStarted] = useState(false);
+
+  const handleStartTest = () => {
+    if (isElectron) {
+      const wsUrl = `ws://localhost:5000/ws?token=${token}&teamId=${teamId}`;
+      (window as any).electron.startAgent(wsUrl);
+      setAgentStatus("running");
+    }
+    setTestStarted(true);
+  };
+
+  useEffect(() => {
+    const checkElectron = typeof window !== "undefined" && !!(window as any).electron;
+    setIsElectron(checkElectron);
+    if (checkElectron) {
+      const electronObj = (window as any).electron;
+      electronObj.getAgentStatus().then((status: string) => {
+        setAgentStatus(status);
+        if (status === "idle" || status === "installing" || status === "error") {
+          setShowSetupOverlay(true);
+        }
+      });
+
+      // Bind progress logs
+      const removeProgressListener = electronObj.onInstallationProgress((data: any) => {
+        setAgentStatus(data.status);
+        setSetupLogs(data.logs || []);
+        if (data.status === "ready") {
+          setShowSetupOverlay(false);
+        }
+      });
+
+      const removeLogListener = electronObj.onAgentLog((log: string) => {
+        console.log("[Electron OS Agent]", log);
+      });
+
+      return () => {
+        removeProgressListener();
+        removeLogListener();
+        electronObj.stopAgent();
+      };
+    }
+  }, [token, teamId]);
+
   // Assessment Submission Modal States
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [zipFile, setZipFile] = useState<File | null>(null);
   const [hostedUrl, setHostedUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [submittingAssessment, setSubmittingAssessment] = useState(false);
-
-  // Gutter & Textarea refs for synced line numbering scroll
-  const gutterRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const handleEditorScroll = () => {
-    if (textareaRef.current && gutterRef.current) {
-      gutterRef.current.scrollTop = textareaRef.current.scrollTop;
-    }
-  };
 
   // Keyboard Biometrics telemetry buffer
   const telemetryBuffer = useRef<any[]>([]);
@@ -305,7 +347,7 @@ export default function CandidateWorkspacePage() {
   };
 
   // Keyboard Biometrics telemetry hook
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const key = e.key;
     const now = performance.now();
     keyPressTimestamps.current.set(key, now);
@@ -321,7 +363,7 @@ export default function CandidateWorkspacePage() {
     e.currentTarget.dataset.flightTime = flightTime.toString();
   };
 
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const key = e.key;
     const now = performance.now();
     const keyDownTime = keyPressTimestamps.current.get(key);
@@ -343,7 +385,7 @@ export default function CandidateWorkspacePage() {
     });
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     const pastedText = e.clipboardData.getData("Text") || "";
     recordTelemetry("EV_PST", {
       paste_length: pastedText.length,
@@ -352,7 +394,7 @@ export default function CandidateWorkspacePage() {
     });
   };
 
-  // Focus and Blur Telemetry hooks
+  // Focus and Blur Telemetry hooks & Proctoring blockers
   useEffect(() => {
     let blurStart: number | null = null;
 
@@ -371,12 +413,36 @@ export default function CandidateWorkspacePage() {
       }
     };
 
+    // Block right-clicks inside the assessment
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    // Block DevTools shortcuts
+    const handleKeyDownBlocker = (e: KeyboardEvent) => {
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J" || e.key === "C" || e.key === "K")) ||
+        (e.ctrlKey && e.key === "U")
+      ) {
+        e.preventDefault();
+        recordTelemetry("EV_BLR", {
+          blocked_shortcut: e.key,
+          target_app: "developer_tools"
+        });
+      }
+    };
+
     window.addEventListener("blur", handleWindowBlur);
     window.addEventListener("focus", handleWindowFocus);
+    window.addEventListener("contextmenu", handleContextMenu);
+    window.addEventListener("keydown", handleKeyDownBlocker);
 
     return () => {
       window.removeEventListener("blur", handleWindowBlur);
       window.removeEventListener("focus", handleWindowFocus);
+      window.removeEventListener("contextmenu", handleContextMenu);
+      window.removeEventListener("keydown", handleKeyDownBlocker);
     };
   }, []);
 
@@ -588,14 +654,40 @@ export default function CandidateWorkspacePage() {
     const timer = setInterval(() => {
       if (token) {
         apiFetch(`/api/chaos/team/${teamId}`)
-          .then((res) => res.json())
-          .then((data) => setChaosEvents(data.events || []))
-          .catch((err) => console.error("Poll chaos error:", err));
+          .then((res) => res.ok ? res.json() : null)
+          .then((data) => { if (data) setChaosEvents(data.events || []); })
+          .catch(() => {});
       }
     }, 8000);
 
     return () => clearInterval(timer);
   }, [teamId, token, apiFetch]);
+
+  // Handle interactive terminal commands — executes on backend
+  const handleTerminalCommand = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cmd = terminalInput.trim();
+    if (!cmd) return;
+    setTerminalOutput((prev) => `${prev}sandbox@hirehub:~$ ${cmd}\n`);
+    setTerminalInput("");
+
+    if (cmd === 'clear') {
+      setTerminalOutput("sandbox@hirehub:~$ \n");
+      return;
+    }
+
+    try {
+      const res = await apiFetch("/api/terminal/exec", {
+        method: "POST",
+        body: JSON.stringify({ command: cmd, files }),
+      });
+      const data = await res.json();
+      const output = data.stdout || data.stderr || '';
+      setTerminalOutput((prev) => `${prev}${output}${output.endsWith('\n') ? '' : '\n'}`);
+    } catch (err: any) {
+      setTerminalOutput((prev) => `${prev}Error: ${err.message}\n`);
+    }
+  };
 
   // Check if any chaos failure is active
   const activeChaos = chaosEvents.filter((c) => c.status === "active");
@@ -650,15 +742,79 @@ export default function CandidateWorkspacePage() {
   return (
     <div className="min-h-screen bg-[#02040a] text-slate-100 flex flex-col h-screen overflow-hidden overflow-x-hidden">
       
-      {/* Workspace Header */}
-      <header className="border-b border-white/5 bg-[#0d1117] relative z-10 shrink-0">
+      {!testStarted ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#02040a] relative overflow-hidden">
+          <div className="grid-bg absolute inset-0 opacity-[0.05] pointer-events-none" />
+          
+          <div className="glass-card max-w-xl w-full p-8 sm:p-10 border border-white/10 rounded-3xl shadow-2xl flex flex-col gap-8 bg-[#0d1117]/90 relative text-left">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center font-bold text-black text-sm font-outfit">
+                H
+              </div>
+              <div>
+                <span className="font-extrabold font-outfit text-white text-base">
+                  AI <span className="text-accent">HireHub</span>
+                </span>
+                <span className="text-[10px] block font-mono text-slate-500 uppercase tracking-widest font-semibold">
+                  Secure Workspace Sandbox
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <h2 className="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight">
+                Prepare Your Assessment Chamber
+              </h2>
+              <p className="text-xs text-slate-400 leading-relaxed font-sans font-medium">
+                You are about to enter the multiplayer collaborative coding session for team <span className="text-accent font-mono font-bold">{teamId}</span>.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col gap-4 font-sans text-xs">
+              <div className="flex items-center gap-2 font-bold text-slate-300">
+                <Cpu className="w-4.5 h-4.5 text-accent" />
+                <span>Security & Proctoring Information</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-normal">
+                To guarantee test integrity, a background proctoring agent is integrated. 
+                Once you click proceed, the proctoring agent we implemented will be **automatically started** in the background. No manual command execution or setup is required from your end.
+              </p>
+              <ul className="space-y-2 text-[10px] text-slate-500 list-inside font-mono">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-accent">✓</span> Keystroke dynamics mapping (timing only)
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-accent">✓</span> Clipboard paste telemetry logging
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-accent">✓</span> Process monitoring & active window tracking
+                </li>
+              </ul>
+              <p className="text-[10px] text-amber-500/80 font-bold uppercase tracking-wider font-mono">
+                ⚠️ The agent will remain active until you click "End Assessment Session".
+              </p>
+            </div>
+
+            <button
+              onClick={handleStartTest}
+              className="w-full py-4 bg-accent hover:bg-accent-hover text-black font-extrabold font-outfit text-xs rounded-xl shadow-lg shadow-accent/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              Proceed & Start Assessment
+              <ArrowRight className="w-4 h-4 text-black" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Workspace Header */}
+          <header className="border-b border-white/5 bg-[#0d1117] relative z-10 shrink-0">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between h-16 w-full">
           <div className="flex items-center gap-3">
             <div className="w-6 h-6 rounded bg-accent flex items-center justify-center font-bold text-black text-xs font-outfit">
-              R
+              H
             </div>
             <span className="font-extrabold font-outfit text-white text-sm">
-              Redrob <span className="text-accent">Sandbox</span>
+              AI <span className="text-accent">HireHub</span>
             </span>
             <span className="text-[9px] font-mono font-bold bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-400 uppercase tracking-widest hidden sm:inline-block">
               IDE Workspace
@@ -697,116 +853,67 @@ export default function CandidateWorkspacePage() {
       {/* Main Workspace Layout */}
       <div className="flex-1 flex overflow-hidden">
         
-        {/* Left Side: IDE and Terminal console */}
+        {/* Left Side: Instructions and Local Proctoring status */}
         <div className="flex-1 flex flex-col border-r border-white/5 bg-[#090d13] overflow-hidden">
           
-          {/* Action Row */}
-          <div className="px-6 py-3 bg-[#0d1117]/60 border-b border-white/5 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
-              {Object.keys(files).map((filename) => (
-                <button
-                  key={filename}
-                  onClick={() => setActiveFile(filename)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 border transition-all cursor-pointer ${
-                    activeFile === filename
-                      ? "bg-slate-900 border-white/10 text-accent shadow"
-                      : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
-                  }`}
-                >
-                  <FileCode className="w-3.5 h-3.5" />
-                  {filename}
-                </button>
-              ))}
-            </div>
+          {/* Header row */}
+          <div className="px-6 py-4 bg-[#0d1117]/60 border-b border-white/5 flex items-center justify-between shrink-0">
+            <h2 className="text-sm font-bold font-outfit text-white tracking-wide flex items-center gap-2">
+              <FileCode className="w-4 h-4 text-accent" />
+              Assessment Tasks & Instructions
+            </h2>
+            <span className="text-[10px] font-mono font-bold bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-400 uppercase tracking-widest">
+              README.md
+            </span>
+          </div>
 
-            <div className="flex items-center gap-3">
-              <select
-                value={selectedLanguage}
-                onChange={(e) => handleLanguageChange(e.target.value)}
-                className="px-2.5 py-1.5 bg-slate-900 border border-white/10 focus:border-accent rounded-lg text-xs font-mono text-slate-300 focus:outline-none transition-all cursor-pointer"
-              >
-                <option value="javascript">JavaScript (.js)</option>
-                <option value="python">Python (.py)</option>
-                <option value="cpp">C++ (.cpp)</option>
-                <option value="java">Java (.java)</option>
-                <option value="go">Go (.go)</option>
-                <option value="rust">Rust (.rs)</option>
-              </select>
-
-              <button
-                onClick={handleSaveFiles}
-                disabled={savingFiles}
-                className="py-1.5 px-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold font-outfit text-[11px] rounded-lg transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
-              >
-                {savingFiles ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <>
-                    <Save className="w-3.5 h-3.5" />
-                    Save Snapshot
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={handleRunCode}
-                disabled={runningCode}
-                className="py-1.5 px-3 bg-accent hover:bg-accent-hover text-black font-extrabold font-outfit text-[11px] rounded-lg transition-all flex items-center gap-1 shadow-md shadow-accent/10 cursor-pointer disabled:opacity-50"
-              >
-                {runningCode ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <>
-                    <Play className="w-3.5 h-3.5 fill-black text-black" />
-                    Run Code
-                  </>
-                )}
-              </button>
+          {/* Instructions Scrollable Container */}
+          <div className="flex-1 overflow-y-auto p-6 font-sans text-xs text-slate-300 leading-relaxed select-text space-y-4 border-b border-white/5">
+            <div className="prose prose-invert max-w-none text-left whitespace-pre-wrap selection:bg-accent selection:text-black">
+              {files["README.md"] || "# Instructions\nNo instructions loaded. Check with your team."}
             </div>
           </div>
 
-          {/* IDE Editor Area with Line Numbers */}
-          <div className="flex-1 flex overflow-hidden font-mono p-2 bg-[#090d13]">
-            {/* Gutter */}
-            <div
-              ref={gutterRef}
-              className="select-none text-right pr-3 pl-2 text-slate-600 border-r border-white/5 text-xs leading-6 overflow-hidden shrink-0"
-              style={{ maxHeight: '100%' }}
-            >
-              {(files[activeFile] || "").split("\n").map((_, idx) => (
-                <div key={idx}>{idx + 1}</div>
-              ))}
-            </div>
-            {/* Textarea */}
-            <textarea
-              ref={textareaRef}
-              value={files[activeFile] || ""}
-              onChange={(e) => handleContentChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onKeyUp={handleKeyUp}
-              onPaste={handlePaste}
-              onScroll={handleEditorScroll}
-              className="flex-1 h-full pl-3 bg-transparent text-slate-200 focus:outline-none resize-none leading-6 font-mono text-xs select-text overflow-y-auto"
-              spellCheck="false"
-            />
-          </div>
-
-          {/* Terminal Console */}
-          <div className="h-[220px] bg-[#02040a] border-t border-white/5 flex flex-col overflow-hidden shrink-0">
-            <div className="px-5 py-2 bg-[#090d13] border-b border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest shrink-0">
+          {/* Proctoring Status Info Bar */}
+          <div className="h-[220px] bg-[#02040a] flex flex-col overflow-hidden shrink-0">
+            <div className="px-6 py-2.5 bg-[#090d13] border-b border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest shrink-0">
               <div className="flex items-center gap-2">
-                <Terminal className="w-3.5 h-3.5" />
-                Console Output
+                <Cpu className="w-3.5 h-3.5 text-accent" />
+                Active Local Security Logs
               </div>
-              <button
-                onClick={() => setTerminalOutput("sandbox@redrob:~$ \n")}
-                className="hover:underline text-[9px]"
-              >
-                Clear Log
-              </button>
+              <span className="text-[9px] text-accent animate-pulse font-bold uppercase">
+                Monitoring Live
+              </span>
             </div>
-            <div className="p-4 flex-1 overflow-y-auto font-mono text-[11px] text-slate-400 leading-relaxed whitespace-pre-wrap select-text selection:bg-accent selection:text-black">
-              {terminalOutput}
+            <div className="p-5 flex-1 grid grid-cols-2 gap-4 text-left font-sans shrink-0">
+              <div className="p-3 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-1 justify-center">
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Keyboard Proctoring</div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  Capturing Timing Dynamics
+                </div>
+              </div>
+              <div className="p-3 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-1 justify-center">
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Clipboard Monitoring</div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  pyperclip active
+                </div>
+              </div>
+              <div className="p-3 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-1 justify-center">
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Process & Shell Monitor</div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  psutil scanning local tools
+                </div>
+              </div>
+              <div className="p-3 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-1 justify-center">
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Window Focus State</div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Focus transitions locked
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -836,7 +943,7 @@ export default function CandidateWorkspacePage() {
               }`}
             >
               <Cpu className="w-4 h-4" />
-              Socratic
+              Companion AI
             </button>
             <button
               onClick={() => setActiveTab("chaos")}
@@ -931,7 +1038,7 @@ export default function CandidateWorkspacePage() {
                     <div className="flex flex-col items-center justify-center text-center py-12 px-6 gap-3">
                       <HelpCircle className="w-8 h-8 text-slate-600" />
                       <p className="text-xs text-slate-500 leading-relaxed">
-                        Need architectural guidance? Ask the Ambient Tech Lead. Responses are wrapped in Socratic prompts to guide you conceptually rather than giving simple solutions.
+                        Need architectural or implementation guidance? Ask the Sandbox Companion AI. Depending on the evaluation round, the Companion operates as a Socratic Guide (Round 1) or a strict Tech Architect (Round 2).
                       </p>
                     </div>
                   ) : (
@@ -943,7 +1050,7 @@ export default function CandidateWorkspacePage() {
                         }`}
                       >
                         <span className="font-bold text-white font-outfit uppercase tracking-wider text-[10px] text-slate-500">
-                          {chat.role === "user" ? "You" : "Socratic ATL"}
+                          {chat.role === "user" ? "You" : "Companion AI"}
                         </span>
                         <div
                           className={`p-3.5 border rounded-2xl leading-relaxed text-slate-300 font-sans ${
@@ -1146,6 +1253,85 @@ export default function CandidateWorkspacePage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+        </>
+      )}
+
+      {/* OS Agent Setup Overlay */}
+      {isElectron && showSetupOverlay && (
+        <div className="fixed inset-0 z-50 bg-[#02040a]/95 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-card max-w-lg w-full p-8 border border-white/10 rounded-3xl shadow-2xl flex flex-col gap-6 bg-[#0d1117]/95 relative text-left">
+            <div>
+              <span className="text-[10px] font-semibold text-accent uppercase tracking-widest font-outfit px-3 py-1 bg-accent/15 border border-accent/20 rounded-full">
+                Security Agent Required
+              </span>
+              <h2 className="text-xl font-bold font-outfit text-white mt-4 mb-2">
+                Setup Local Assessment Monitoring
+              </h2>
+              <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                RAS runs as a local secure desktop application. In order to begin the assessment, you must grant permission to download and launch the background OS Proctoring Agent (capturing keyboard latency telemetry, clipboards, and active window focus).
+              </p>
+            </div>
+
+            {agentStatus === "idle" && (
+              <div className="flex flex-col gap-4">
+                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                    Requirements Checked:
+                  </div>
+                  <ul className="text-[11px] text-slate-500 list-disc list-inside space-y-1">
+                    <li>Python 3+ Runtime Environment</li>
+                    <li>Keyboard Telemetry Hooks (pynput)</li>
+                    <li>Window Focus Listeners (pygetwindow)</li>
+                    <li>Process Integrity Monitor (psutil)</li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => (window as any).electron.startInstallation()}
+                  className="w-full py-3 bg-accent hover:bg-accent-hover text-black font-extrabold font-outfit text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Cpu className="w-4 h-4 text-black" />
+                  Grant Permission & Download Dependencies
+                </button>
+              </div>
+            )}
+
+            {agentStatus === "installing" && (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 text-accent animate-spin" />
+                  <span className="text-xs font-bold text-slate-300">Downloading libraries & setting up .venv...</span>
+                </div>
+                <div className="h-40 overflow-y-auto bg-black/40 border border-white/5 rounded-2xl p-4 font-mono text-[10px] text-slate-500 flex flex-col gap-1 leading-normal">
+                  {setupLogs.map((log, index) => (
+                    <div key={index}>{log}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {agentStatus === "error" && (
+              <div className="flex flex-col gap-4">
+                <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-2xl flex flex-col gap-2">
+                  <div className="flex items-center gap-2 font-bold font-outfit">
+                    <AlertTriangle className="w-4 h-4 text-rose-400" />
+                    Installation Failed
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-sans leading-relaxed">
+                    {setupLogs[setupLogs.length - 1] || "Ensure Python 3 is installed and added to your environmental PATH."}
+                  </p>
+                </div>
+                <button
+                  onClick={() => (window as any).electron.startInstallation()}
+                  className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold font-outfit text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  Retry Setup
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

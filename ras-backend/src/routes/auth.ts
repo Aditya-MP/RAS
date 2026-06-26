@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabaseClient, supabaseAdmin } from '../config/supabase';
 import { requireAuth } from '../middleware/auth';
+import logger from '../utils/logger';
 
 const router = Router();
 
@@ -19,7 +20,8 @@ router.post('/signup', async (req, res) => {
       email,
       password,
       options: {
-        data: { full_name, role } // stored in user_metadata
+        data: { full_name, role },
+        emailRedirectTo: undefined // Disable email confirmation redirect
       }
     });
 
@@ -40,7 +42,7 @@ router.post('/signup', async (req, res) => {
 
       if (profileError) {
         const safeEmail = email.replace(/[\r\n]/g, '_');
-        console.error(`Profile creation error for ${safeEmail}:`, profileError.message);
+        logger.error(`Profile creation error for ${safeEmail}:`, profileError.message);
         return res.status(500).json({ error: 'Account created but profile setup failed' });
       }
     }

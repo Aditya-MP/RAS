@@ -1,21 +1,7 @@
 import { supabaseAdmin } from '../config/supabase';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const _pdfParseModule = require('pdf-parse');
-const pdfParse = (typeof _pdfParseModule === 'function' ? _pdfParseModule : _pdfParseModule.default) as (buffer: Buffer) => Promise<{ text: string; numpages: number }>;
-
-const SUSPICIOUS_PATTERNS = [
-  /system\s*instruction/i,
-  /ignore\s+all\s+previous\s+instructions/i,
-  /rate\s+this\s+candidate/i,
-  /score\s+10\s*\/\s*10/i,
-  /bypass\s+all\s+screens/i,
-  /override\s+previous\s+instructions/i,
-  /candidate.*score.*100/i,
-  /set\s+candidate_score/i,
-  /give.*perfect.*score/i,
-  /ignore.*rules/i,
-  /system\s+override/i,
-];
+const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string; numpages: number }>;
+import { classifyInjection } from './injectionClassifier';
 
 export interface ScanResult {
   hasInjection: boolean;
@@ -25,6 +11,9 @@ export interface ScanResult {
     totalPages: number;
     wordCount: number;
     isResume: boolean;
+    injectionConfidence?: number;
+    injectionType?: string;
+    semanticScore?: number;
   };
 }
 
@@ -32,16 +21,12 @@ export const scanPDF = async (pdfBuffer: Buffer): Promise<ScanResult> => {
   const data = await pdfParse(pdfBuffer);
   const text = data.text || '';
 
-  const suspiciousParts: string[] = [];
-  let cleanText = text;
-
-  for (const pattern of SUSPICIOUS_PATTERNS) {
-    const matches = text.match(new RegExp(pattern.source, 'gi'));
-    if (matches) {
-      suspiciousParts.push(...matches);
-      cleanText = cleanText.replace(new RegExp(pattern.source, 'gi'), '');
-    }
-  }
+  // Use ML-based classifier
+  const classifierResult = classifyInjection(text);
+  const suspiciousParts = classifierResult.suspiciousParts;
+  let cleanText = suspiciousParts.length > 0
+    ? suspiciousParts.reduce((t, part) => t.replace(part, ''), text)
+    : text;
 
   const lowercaseText = text.toLowerCase();
   const resumeKeywords = ['experience', 'education', 'skills', 'projects', 'work', 'employment', 'cv', 'resume', 'history', 'academic', 'qualification', 'certifications', 'summary'];
@@ -49,13 +34,16 @@ export const scanPDF = async (pdfBuffer: Buffer): Promise<ScanResult> => {
   const isResume = keywordCount >= 3;
 
   return {
-    hasInjection: suspiciousParts.length > 0,
+    hasInjection: classifierResult.isInjection,
     cleanText: cleanText.trim(),
     suspiciousParts,
     metadata: {
       totalPages: data.numpages || 1,
       wordCount: text.split(/\s+/).filter((w: string) => w.length > 0).length,
       isResume,
+      injectionConfidence: classifierResult.confidence,
+      injectionType: classifierResult.injectionType || undefined,
+      semanticScore: classifierResult.semanticScore,
     },
   };
 };

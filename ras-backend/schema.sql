@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS public.assessments (
   description TEXT,
   jd_text TEXT,
   extracted_skills TEXT[],
-  seniority_level TEXT CHECK (seniority_level IN ('junior', 'mid', 'senior')),
+  seniority_level TEXT CHECK (seniority_level IN ('junior', 'mid', 'senior', 'lead')),
   tech_track TEXT CHECK (tech_track IN ('frontend', 'backend', 'devops', 'fullstack')),
   max_candidates INT DEFAULT 5,
   created_at TIMESTAMPTZ DEFAULT now()
@@ -130,6 +130,30 @@ CREATE TABLE IF NOT EXISTS public.resumes (
   UNIQUE(candidate_id)
 );
 
+CREATE TABLE IF NOT EXISTS public.jobs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  employer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  company TEXT NOT NULL,
+  location TEXT DEFAULT 'Remote',
+  salary TEXT DEFAULT '',
+  description TEXT NOT NULL,
+  tags TEXT[] DEFAULT '{}',
+  tech_track TEXT CHECK (tech_track IN ('frontend', 'backend', 'devops', 'fullstack')),
+  seniority_level TEXT CHECK (seniority_level IN ('junior', 'mid', 'senior', 'lead')),
+  status TEXT DEFAULT 'open' CHECK (status IN ('open', 'closed')),
+  assessment_id UUID REFERENCES public.assessments(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.job_applications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  job_id UUID NOT NULL REFERENCES public.jobs(id) ON DELETE CASCADE,
+  candidate_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(job_id, candidate_id)
+);
+
 -- ─────────────────────────────────────────
 -- ENABLE RLS ON ALL TABLES
 -- ─────────────────────────────────────────
@@ -144,6 +168,8 @@ ALTER TABLE public.peer_reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chaos_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resumes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.job_applications ENABLE ROW LEVEL SECURITY;
 
 -- ─────────────────────────────────────────
 -- POLICIES — PROFILES
@@ -358,6 +384,38 @@ CREATE POLICY "Employers can view resumes of their candidates"
 DROP POLICY IF EXISTS "Candidates can update own resume" ON resumes;
 CREATE POLICY "Candidates can update own resume"
   ON resumes FOR UPDATE USING (auth.uid() = candidate_id);
+
+-- ─────────────────────────────────────────
+-- POLICIES — JOBS
+-- ─────────────────────────────────────────
+DROP POLICY IF EXISTS "Employers can manage own jobs" ON jobs;
+CREATE POLICY "Employers can manage own jobs"
+  ON jobs FOR ALL USING (auth.uid() = employer_id);
+
+DROP POLICY IF EXISTS "Anyone can read jobs" ON jobs;
+CREATE POLICY "Anyone can read jobs"
+  ON jobs FOR SELECT USING (true);
+
+-- ─────────────────────────────────────────
+-- POLICIES — JOB APPLICATIONS
+-- ─────────────────────────────────────────
+DROP POLICY IF EXISTS "Candidates can create applications" ON public.job_applications;
+CREATE POLICY "Candidates can create applications"
+  ON public.job_applications FOR INSERT WITH CHECK (auth.uid() = candidate_id);
+
+DROP POLICY IF EXISTS "Users can read own applications" ON public.job_applications;
+CREATE POLICY "Users can read own applications"
+  ON public.job_applications FOR SELECT USING (auth.uid() = candidate_id);
+
+DROP POLICY IF EXISTS "Employers can read applications of their own jobs" ON public.job_applications;
+CREATE POLICY "Employers can read applications of their own jobs"
+  ON public.job_applications FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.jobs
+      WHERE public.jobs.id = job_applications.job_id
+      AND public.jobs.employer_id = auth.uid()
+    )
+  );
 
 -- ─────────────────────────────────────────
 -- REALTIME

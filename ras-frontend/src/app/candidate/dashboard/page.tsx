@@ -57,6 +57,27 @@ interface Job {
   description: string;
 }
 
+const getActiveStep = (status: string): number => {
+  switch (status) {
+    case "applied":
+      return 1;
+    case "pre_qualified":
+      return 2;
+    case "round1_scheduled":
+    case "round1_completed":
+      return 3;
+    case "round2_scheduled":
+    case "round2_completed":
+      return 4;
+    case "shortlisted_for_hr":
+      return 5;
+    case "rejected":
+      return -1;
+    default:
+      return 1;
+  }
+};
+
 export default function CandidateDashboard() {
   const { profile, token, signOut, apiFetch } = useAuth();
   const router = useRouter();
@@ -74,50 +95,11 @@ export default function CandidateDashboard() {
   const [cardCvc, setCardCvc] = useState<string>("");
 
   // Job List state
-  const [jobs] = useState<Job[]>([
-    {
-      id: "job-1",
-      title: "Senior AI Integration Architect",
-      company: "Redrob Corp",
-      location: "San Francisco, CA (Hybrid)",
-      salary: "$160,000 - $190,000",
-      match: 96,
-      tags: ["React", "Python", "LLMs", "Vector DBs"],
-      description: "Design and implement collaborative agentic pipelines utilizing state-of-the-art telemetry architectures. Work closely with product leads to scale cognitive software evaluation metrics."
-    },
-    {
-      id: "job-2",
-      title: "Lead Fullstack Developer",
-      company: "Vercel Partners",
-      location: "Remote (Global)",
-      salary: "$140,000 - $170,000",
-      match: 89,
-      tags: ["Next.js", "TypeScript", "Node.js", "Postgres"],
-      description: "Scale core runtime dashboards with real-time analytics, focusing on sub-millisecond updates, telemetry logging mechanisms, and premium glassmorphism layouts."
-    },
-    {
-      id: "job-3",
-      title: "Ambient Telemetry Engineer",
-      company: "Supabase Labs",
-      location: "Singapore (Remote)",
-      salary: "$130,000 - $155,000",
-      match: 84,
-      tags: ["Rust", "WebSockets", "TimescaleDB", "Go"],
-      description: "Maintain high-frequency websocket telemetry engines mapping keystroke dynamics, paste buffers, and developer focus events for distributed assessments."
-    },
-    {
-      id: "job-4",
-      title: "Next-Gen UI Specialist",
-      company: "Luxury Creative Agency",
-      location: "New York, NY (Onsite)",
-      salary: "$110,000 - $140,000",
-      match: 76,
-      tags: ["WebGL", "Three.js", "Tailwind CSS", "GSAP"],
-      description: "Build immersive landing pages with 3D particles, custom canvas overlays, and fluid scroll animations mimicking modern creative designs."
-    }
-  ]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(false);
 
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
+  const [detailedApplications, setDetailedApplications] = useState<any[]>([]);
   const [selectedJobToApply, setSelectedJobToApply] = useState<Job | null>(null);
 
   // Resume Upload State
@@ -155,20 +137,23 @@ export default function CandidateDashboard() {
   const [profileSyncStatus, setProfileSyncStatus] = useState<string | null>(null);
 
   // Notification Feed
-  const [notifications, setNotifications] = useState<{ id: string; text: string; date: string; type: "alert" | "info" | "success" }[]>([
-    {
-      id: "notif-1",
-      text: "System registered a pending Round 1 Workspace Invitation. Enter UID to unlock instructions.",
-      date: "Just now",
-      type: "alert"
-    },
-    {
-      id: "notif-2",
-      text: "Welcome to Redrob Sandboxed assessments! Keep your profile completed to match active jobs.",
-      date: "2 hours ago",
-      type: "info"
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+
+  const fetchNotifications = useCallback(async () => {
+    setLoadingNotifications(true);
+    try {
+      const res = await apiFetch("/api/notifications");
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+      }
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+    } finally {
+      setLoadingNotifications(false);
     }
-  ]);
+  }, [apiFetch]);
 
   // Fetch assigned teams
   const fetchTeams = useCallback(async () => {
@@ -182,6 +167,45 @@ export default function CandidateDashboard() {
       console.error("Error fetching candidate teams:", err);
     } finally {
       setLoadingTeams(false);
+    }
+  }, [apiFetch]);
+
+  const fetchJobs = useCallback(async () => {
+    setLoadingJobs(true);
+    try {
+      const res = await apiFetch("/api/jobs");
+      if (res.ok) {
+        const data = await res.json();
+        const openJobs = (data.jobs || []).filter((job: any) => job.status !== "closed");
+
+        // Fetch match scores in parallel for each job
+        const jobsWithMatch = await Promise.all(
+          openJobs.map(async (job: any) => {
+            try {
+              const matchRes = await apiFetch(`/api/jobs/${job.id}/match`);
+              if (matchRes.ok) {
+                const matchData = await matchRes.json();
+                return { ...job, match: matchData.match?.overallScore || 75 };
+              }
+            } catch {
+              // fallback
+            }
+            return { ...job, match: 75 };
+          })
+        );
+        setJobs(jobsWithMatch);
+      }
+
+      const appRes = await apiFetch("/api/jobs/applications");
+      if (appRes.ok) {
+        const appData = await appRes.json();
+        setAppliedJobs(appData.applications || []);
+        setDetailedApplications(appData.detailedApplications || []);
+      }
+    } catch (err) {
+      console.error("Error fetching jobs:", err);
+    } finally {
+      setLoadingJobs(false);
     }
   }, [apiFetch]);
 
@@ -225,7 +249,9 @@ export default function CandidateDashboard() {
       return;
     }
     fetchTeams();
-  }, [profile, token, router, fetchTeams]);
+    fetchJobs();
+    fetchNotifications();
+  }, [profile, token, router, fetchTeams, fetchJobs, fetchNotifications]);
 
   // Handle Mock Payment Submit
   const handlePaymentSubmit = (e: React.FormEvent) => {
@@ -313,6 +339,15 @@ export default function CandidateDashboard() {
       }
 
       if (selectedJobToApply) {
+        const applyRes = await apiFetch(`/api/jobs/${selectedJobToApply.id}/apply`, {
+          method: "POST"
+        });
+
+        if (!applyRes.ok) {
+          const applyData = await applyRes.json();
+          throw new Error(applyData.error || "Failed to submit job application");
+        }
+
         const updated = [...appliedJobs, selectedJobToApply.id];
         setAppliedJobs(updated);
         if (typeof window !== "undefined") {
@@ -451,10 +486,10 @@ export default function CandidateDashboard() {
         <div className="max-w-[1550px] mx-auto px-6 py-4 flex items-center justify-between h-16 w-full">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded bg-orange-600 flex items-center justify-center font-bold text-white font-outfit text-sm shadow-sm shadow-orange-600/20">
-              R
+              H
             </div>
             <span className="font-extrabold font-outfit text-white text-base tracking-tight">
-              Redrob <span className="text-orange-500">Sandbox</span>
+              AI <span className="text-orange-500">HireHub</span>
             </span>
             <span className="text-[9px] font-mono font-bold bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400 uppercase tracking-widest ml-2 hidden sm:inline-block">
               Developer Console
@@ -527,6 +562,25 @@ export default function CandidateDashboard() {
           >
             <Home className="w-4 h-4" />
             <span>Dashboard Home</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("notifications")}
+            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold font-outfit flex items-center gap-3 transition-all cursor-pointer ${
+              activeTab === "notifications"
+                ? "payroute-active text-orange-500 font-extrabold"
+                : "bg-transparent text-slate-400 hover:text-orange-550 hover:text-orange-550 hover:text-orange-500 hover:bg-orange-950/10"
+            }`}
+          >
+            <Bell className="w-4 h-4" />
+            <span className="flex items-center justify-between w-full">
+              <span>Notifications</span>
+              {notifications.length > 0 && (
+                <span className="bg-orange-500 text-black text-[9px] font-black font-mono w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+                  {notifications.length}
+                </span>
+              )}
+            </span>
           </button>
 
           <button
@@ -608,6 +662,7 @@ export default function CandidateDashboard() {
           <div className="md:hidden flex items-center gap-2 overflow-x-auto scrollbar-none px-4 py-3 border-b border-slate-800 bg-[#070b16]/70 sticky top-0 z-20 backdrop-blur-md">
             {[
               { id: "home", label: "Home", icon: Home },
+              { id: "notifications", label: "Notifications", icon: Bell },
               { id: "analysis", label: "Analytics", icon: TrendingUp },
               { id: "jobs", label: "Find Jobs", icon: Briefcase },
               { id: "assessment", label: "Assessment", icon: Shield },
@@ -691,6 +746,131 @@ export default function CandidateDashboard() {
                 <div className="text-3xl font-black font-outfit text-orange-500 neon-text-orange mt-1">3</div>
               </div>
             </div>
+
+            {/* Real-time Candidate Funnel Stepper */}
+            {detailedApplications.length > 0 && (
+              <div className="payroute-card flex flex-col gap-6 text-left shadow-xl w-full">
+                <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-100 font-outfit uppercase tracking-wider flex items-center gap-2">
+                      <Activity className="w-4.5 h-4.5 text-orange-500" />
+                      Active Job Applications & AI Assessment Funnel
+                    </h3>
+                    <p className="text-[10px] text-slate-500 mt-0.5 font-sans">
+                      AI HireHub agents continuously manage screening, scheduling, and workspace evaluations on autopilot.
+                    </p>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold bg-orange-500/10 px-2 py-0.5 rounded text-orange-500 uppercase tracking-widest">
+                    Real-time Pipeline
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-8">
+                  {detailedApplications.map((app: any) => {
+                    const activeStep = getActiveStep(app.status);
+                    const isRejected = app.status === "rejected";
+                    
+                    const steps = [
+                      { label: "Applied", desc: "Resume Submitted" },
+                      { label: "AI Screening", desc: "HCD & Skills Match" },
+                      { label: "Round 1 Sandbox", desc: "Socratic Coding Companion" },
+                      { label: "Round 2 Advanced", desc: "Strict Architecture Check" },
+                      { label: "HR Evaluation", desc: "Final Review" }
+                    ];
+
+                    return (
+                      <div key={app.id} className="p-5 bg-slate-950/45 border border-white/[0.04] rounded-2xl flex flex-col gap-6">
+                        {/* Application Job Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex flex-col text-left">
+                            <h4 className="text-xs font-black text-slate-200 font-outfit uppercase tracking-wide">
+                              {app.job?.title || "Software Engineer"}
+                            </h4>
+                            <div className="flex items-center gap-3 text-[10px] text-slate-500 mt-1 font-mono">
+                              <span>{app.job?.company || "AI HireHub"}</span>
+                              <span>•</span>
+                              <span>{app.job?.location || "Remote"}</span>
+                              <span>•</span>
+                              <span>Applied: {new Date(app.created_at).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 shrink-0">
+                            {isRejected ? (
+                              <span className="text-[9px] font-mono font-bold text-rose-450 text-rose-450 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                Closed / Rejected
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-mono font-bold text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                Stage: {app.status.replace("_", " ")}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Stepper Pipeline */}
+                        <div className="w-full relative py-2">
+                          {/* Stepper Line Background */}
+                          <div className="absolute top-[28px] left-[5%] right-[5%] h-[2px] bg-slate-800 -z-0" />
+                          
+                          {/* Stepper Line Active Fill */}
+                          {!isRejected && activeStep > 1 && (
+                            <div 
+                              className="absolute top-[28px] left-[5%] h-[2px] bg-gradient-to-r from-orange-655 to-orange-500 -z-0 transition-all duration-500" 
+                              style={{ width: `${Math.min(100, ((activeStep - 1) / 4) * 90)}%`, backgroundColor: '#f97316' }}
+                            />
+                          )}
+
+                          {/* Steps nodes */}
+                          <div className="relative flex justify-between items-start z-10 w-full">
+                            {steps.map((step, idx) => {
+                              const stepNum = idx + 1;
+                              const isCompleted = !isRejected && activeStep > stepNum;
+                              const isActive = !isRejected && activeStep === stepNum;
+                              
+                              return (
+                                <div key={step.label} className="flex flex-col items-center text-center w-[18%]">
+                                  {/* Step Circle */}
+                                  <div 
+                                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                                      isRejected 
+                                        ? "bg-slate-900 border border-slate-850 text-slate-600"
+                                        : isCompleted
+                                          ? "bg-orange-600 border border-orange-500 text-white shadow-md shadow-orange-600/20"
+                                          : isActive
+                                            ? "bg-slate-900 border-2 border-orange-500 text-orange-500 animate-pulse font-extrabold"
+                                            : "bg-slate-900 border border-slate-800 text-slate-500"
+                                    }`}
+                                  >
+                                    {isCompleted ? (
+                                      <Check className="w-4 h-4 text-white" />
+                                    ) : (
+                                      <span>{stepNum}</span>
+                                    )}
+                                  </div>
+
+                                  {/* Step Label */}
+                                  <span className={`text-[10px] font-black font-outfit mt-2 ${
+                                    isActive ? "text-orange-500 font-extrabold" : isCompleted ? "text-slate-300" : "text-slate-500"
+                                  }`}>
+                                    {step.label}
+                                  </span>
+                                  
+                                  {/* Step Description */}
+                                  <span className="text-[8px] font-sans text-slate-500 max-w-[85px] leading-tight mt-0.5 hidden md:block">
+                                    {step.desc}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Grid content: Job Market inline Graph + Assessments/Notifications */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 shrink-0">
@@ -803,12 +983,13 @@ export default function CandidateDashboard() {
                                 Review
                               </Link>
                             ) : (
-                              <button
-                                onClick={() => { setUidInput(team.id); setActiveTab("assessment"); }}
-                                className="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-750 text-slate-350 font-bold font-outfit text-[9px] rounded-lg transition-all cursor-pointer border-none"
+                              <Link
+                                href={`/candidate/workspace/${team.id}`}
+                                className="py-1.5 px-3 bg-orange-655 hover:bg-orange-500 text-white font-bold font-outfit text-[9px] rounded-lg transition-all flex items-center gap-1 cursor-pointer shadow-md border-none"
                               >
-                                Verify UID
-                              </button>
+                                Launch Sandbox
+                                <Play className="w-2.5 h-2.5 fill-white text-white" />
+                              </Link>
                             )}
                           </div>
                         </div>
@@ -819,16 +1000,22 @@ export default function CandidateDashboard() {
 
                 {/* Mini Notifications inbox */}
                 <div className="bg-slate-900/40 border-none p-3.5 rounded-xl flex flex-col gap-2 text-left mt-3">
-                  <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">Security System Alerts</span>
+                  <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">System alerts & paths</span>
                   {notifications.slice(0, 2).map(n => (
                     <div key={n.id} className="flex items-start gap-2 text-[10px]">
-                      <div className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0 bg-orange-500`} />
+                      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${n.type === 'alert' ? 'bg-rose-500 animate-pulse' : 'bg-orange-500'}`} />
                       <div className="flex flex-col">
-                        <p className="text-slate-300 font-medium leading-normal">{n.text}</p>
-                        <span className="text-[8px] font-mono text-slate-500 mt-0.5">{n.date}</span>
+                        <p className="text-slate-300 font-semibold leading-normal">{n.title || n.text}</p>
+                        {n.message && <p className="text-slate-450 text-slate-400 font-medium leading-normal text-[9px] mt-0.5">{n.message}</p>}
+                        <span className="text-[8px] font-mono text-slate-500 mt-0.5">
+                          {n.created_at ? new Date(n.created_at).toLocaleString() : n.date}
+                        </span>
                       </div>
                     </div>
                   ))}
+                  {notifications.length === 0 && (
+                    <span className="text-[9px] font-sans text-slate-500 italic">No new notifications.</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -839,8 +1026,17 @@ export default function CandidateDashboard() {
                 💼 Personalized Job Recommendations
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {jobs.slice(0, 3).map(job => (
+              {loadingJobs ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+                </div>
+              ) : jobs.length === 0 ? (
+                <div className="text-center py-8 text-xs text-slate-500">
+                  No jobs available at the moment.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {jobs.slice(0, 3).map(job => (
                   <div key={job.id} className="bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] hover:border-lime-500/30 p-4 rounded-xl flex flex-col justify-between min-h-[180px] transition-all shadow-sm group">
                     <div className="flex flex-col gap-1.5">
                       <div className="flex justify-between items-start gap-2">
@@ -882,7 +1078,8 @@ export default function CandidateDashboard() {
                     </div>
                   </div>
                 ))}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1091,6 +1288,99 @@ export default function CandidateDashboard() {
           </div>
         )}
 
+        {/* TAB 2.5: NOTIFICATIONS INBOX */}
+        {activeTab === "notifications" && (
+          <div className="px-6 md:px-10 py-6 md:py-8 w-full flex flex-col gap-6 pb-20">
+            <div className="flex flex-col gap-1 text-left shrink-0">
+              <h1 className="text-lg font-black font-outfit text-white uppercase tracking-wider">
+                Notifications Inbox
+              </h1>
+              <p className="text-xs text-slate-450 leading-normal font-sans font-medium">
+                Keep up to date with scheduler slots, interview details, and direct messages sent by employers.
+              </p>
+            </div>
+
+            {loadingNotifications ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="text-center py-12 text-xs text-slate-500 payroute-card">
+                No notifications found.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {notifications.map((notif: any) => {
+                  const hasUid = notif.metadata?.uid;
+                  const timeSlot = notif.metadata?.time_slot;
+                  
+                  return (
+                    <div
+                      key={notif.id}
+                      className={`p-5 rounded-2xl border text-left flex flex-col gap-3 relative transition-all group ${
+                        notif.type === 'alert'
+                          ? 'bg-rose-950/10 border-rose-900/30'
+                          : notif.type === 'success'
+                          ? 'bg-lime-950/10 border-lime-900/30'
+                          : 'bg-[#0a0f1d]/45 backdrop-blur-xl border-white/[0.06] hover:border-orange-500/25'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex flex-col gap-0.5">
+                          <h3 className={`text-xs font-black font-outfit ${
+                            notif.type === 'alert' ? 'text-rose-455 text-rose-400' : notif.type === 'success' ? 'text-lime-455 text-lime-400' : 'text-white'
+                          }`}>
+                            {notif.title}
+                          </h3>
+                          <span className="text-[8px] font-mono text-slate-505 text-slate-500">
+                            From: {notif.sender?.full_name || "System"} ({notif.sender?.email || "system@hirehub.com"})
+                          </span>
+                        </div>
+                        <span className="text-[8px] font-mono text-slate-505 text-slate-500">
+                          {new Date(notif.created_at).toLocaleString()}
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                        {notif.message}
+                      </p>
+
+                      {(hasUid || timeSlot) && (
+                        <div className="p-3.5 bg-slate-950/60 border border-white/[0.03] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                          <div className="flex flex-col gap-1 text-left">
+                            {timeSlot && (
+                              <div className="text-[10px] text-slate-400 font-sans">
+                                📅 <span className="font-semibold text-white">Time Slot:</span> {timeSlot}
+                              </div>
+                            )}
+                            {hasUid && (
+                              <div className="text-[10px] text-slate-400 font-mono">
+                                🔑 <span className="font-semibold text-white">Team UID:</span> <code className="bg-white/5 px-1.5 py-0.5 rounded text-orange-400 font-mono text-[9px] select-all">{hasUid}</code>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {hasUid && (
+                            <button
+                              onClick={() => {
+                                router.push(`/candidate/workspace/${hasUid}`);
+                              }}
+                              className="py-1 px-2.5 bg-orange-650 hover:bg-orange-500 text-white font-bold font-outfit text-[9px] rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-sm shrink-0"
+                            >
+                              Launch Assessment Sandbox
+                              <ArrowRight className="w-3 h-3 text-white" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TAB 3: FIND JOBS (PERSONALIZED) */}
         {activeTab === "jobs" && (
           <div className="px-6 md:px-10 py-6 md:py-8 w-full flex flex-col gap-6 pb-20">
@@ -1105,7 +1395,16 @@ export default function CandidateDashboard() {
 
             {/* Job listings */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0">
-              {jobs.map(job => (
+              {loadingJobs ? (
+                <div className="col-span-2 flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+                </div>
+              ) : jobs.length === 0 ? (
+                <div className="col-span-2 text-center py-12 text-xs text-slate-500">
+                  No jobs available at the moment.
+                </div>
+              ) : (
+                jobs.map(job => (
                 <div key={job.id} className="p-5 bg-[#0a0f1d]/45 backdrop-blur-xl border border-white/[0.06] hover:border-fuchsia-500/25 rounded-2xl flex flex-col justify-between min-h-[220px] transition-all relative group">
                   <div className="flex flex-col gap-2.5">
                     <div className="flex justify-between items-start">
@@ -1162,7 +1461,8 @@ export default function CandidateDashboard() {
                     )}
                   </div>
                 </div>
-              ))}
+              ))
+            )}
             </div>
           </div>
         )}

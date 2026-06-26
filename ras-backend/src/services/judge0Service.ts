@@ -1,4 +1,9 @@
 import axios from 'axios';
+import { exec } from 'child_process';
+import { writeFileSync, unlinkSync, mkdtempSync, rmSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import logger from '../utils/logger';
 
 const JUDGE0_URL = process.env.JUDGE0_API_URL || 'https://ce.judge0.com';
 const JUDGE0_API_KEY = process.env.JUDGE0_API_KEY || '';
@@ -72,12 +77,18 @@ const judge0Headers = {
 };
 
 export const submitCode = async (params: SubmissionParams): Promise<SubmissionResponse> => {
+  // Try local execution first (fastest, works offline)
+  try {
+    return await submitLocally(params);
+  } catch {
+    // Local not available for this language, try external services
+  }
+
   try {
     return await submitViaJudge0(params);
   } catch (error: any) {
-    // Fallback to Piston on rate limit (429) or Judge0 unavailable
     if (error.response?.status === 429 || error.message?.includes('not responding')) {
-      console.warn('Judge0 unavailable, falling back to Piston');
+      logger.warn('Judge0 unavailable, falling back to Piston');
       return await submitViaPiston(params);
     }
     throw error;
@@ -146,6 +157,51 @@ const submitViaPiston = async (params: SubmissionParams): Promise<SubmissionResp
     };
   } catch (error: any) {
     throw new Error(`Piston fallback error: ${error.message}`);
+  }
+};
+
+const LOCAL_LANGUAGES = new Set([63, 71, 62, 54, 60, 73]);
+
+const submitLocally = async (params: SubmissionParams): Promise<SubmissionResponse> => {
+  if (!LOCAL_LANGUAGES.has(params.language_id)) {
+    throw new Error('Local execution not supported for this language');
+  }
+
+  const langName = languageNameMap[params.language_id] || 'javascript';
+  const tmpDir = mkdtempSync(join(tmpdir(), 'ras-exec-'));
+  const extMap: Record<string, string> = { javascript: 'js', python: 'py', java: 'java', cpp: 'cpp', go: 'go', rust: 'rs' };
+  const ext = extMap[langName] || 'js';
+  const filePath = join(tmpDir, `code.${ext}`);
+
+  try {
+    writeFileSync(filePath, params.source_code);
+
+    const cmdMap: Record<string, string> = {
+      javascript: `node "${filePath}"`,
+      python: `python3 "${filePath}" || python "${filePath}"`,
+    };
+
+    const cmd = cmdMap[langName];
+    if (!cmd) throw new Error(`No local runner for ${langName}`);
+
+    const stdout = await new Promise<string>((resolve, reject) => {
+      exec(cmd, { timeout: 10000, cwd: tmpDir }, (err, stdout, stderr) => {
+        if (err && (err as any).killed) reject(new Error('Execution timed out'));
+        resolve(stdout || stderr || err?.message || '');
+      });
+    });
+
+    return {
+      stdout: stdout || null,
+      stderr: null,
+      compile_output: null,
+      message: null,
+      time: '0',
+      memory: 0,
+      status: { id: 3, description: 'Accepted' },
+    };
+  } finally {
+    try { rmSync(tmpDir, { recursive: true, force: true }); } catch { /* ignore cleanup errors */ }
   }
 };
 

@@ -2,6 +2,8 @@ import { supabaseAdmin } from '../config/supabase';
 import { getCalibratedScore } from './peerReviewService';
 import { getChaosMetrics } from './chaosService';
 import { getCandidateInfluenceScores } from './gitAnalysisService';
+import { createTeam } from './teamService';
+import { analyzeKeystrokeAnomaly, KeystrokeFeatures } from './anomalyDetectionService';
 
 export const getDialogueStats = async (teamId: string, candidateId: string) => {
   const { data, error } = await supabaseAdmin
@@ -54,6 +56,28 @@ const fetchTeamTelemetry = async (teamId: string) => {
 const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 
 export const scoreTeam = async (teamId: string): Promise<ScoringMetrics[]> => {
+  // Fetch team details first
+  const { data: team, error: teamError } = await supabaseAdmin
+    .from('teams')
+    .select('round, assessment_id, assessment:assessments(id, employer_id, title)')
+    .eq('id', teamId)
+    .single();
+
+  if (teamError || !team) {
+    throw new Error('Team not found or error loading details');
+  }
+
+  const assessment = Array.isArray(team.assessment) ? team.assessment[0] : team.assessment;
+  const employerId = assessment.employer_id;
+  const teamRound = team.round || 1;
+
+  // Fetch job matching this assessment to update applications
+  const { data: job, error: jobError } = await supabaseAdmin
+    .from('jobs')
+    .select('id, title, company, employer_id')
+    .eq('assessment_id', assessment.id)
+    .single();
+
   const telemetryEvents = await fetchTeamTelemetry(teamId);
 
   // Group events by candidate
@@ -110,8 +134,9 @@ export const scoreTeam = async (teamId: string): Promise<ScoringMetrics[]> => {
       aiFluency = 0.4 + 0.3 * acceptRatio + 0.3 * verificationScore;
     }
 
-    // --- Keystroke Integrity ---
+    // --- Keystroke Integrity (ML-based anomaly detection) ---
     const kbdEvents = events.filter(e => e.event_class === 'EV_KBD');
+    const pasteEvents = events.filter(e => e.event_class === 'EV_PST');
     const dwellTimes: number[] = [];
     const flightTimes: number[] = [];
     for (let i = 0; i < kbdEvents.length; i++) {
@@ -123,9 +148,14 @@ export const scoreTeam = async (teamId: string): Promise<ScoringMetrics[]> => {
     }
     let integrity = 0.5;
     if (flightTimes.length > 10) {
-      const mean = avg(flightTimes);
-      const variance = flightTimes.reduce((a, b) => a + (b - mean) ** 2, 0) / flightTimes.length;
-      integrity = 0.2 + 0.7 * Math.min(variance / 200, 1);
+      const features: KeystrokeFeatures = {
+        dwellTimes,
+        flightTimes,
+        pasteEvents: pasteEvents.length,
+        totalEvents: kbdEvents.length,
+      };
+      const anomalyResult = analyzeKeystrokeAnomaly(features);
+      integrity = anomalyResult.integrityScore;
     }
 
     // --- Dialogue Stats ---
@@ -203,6 +233,63 @@ export const scoreTeam = async (teamId: string): Promise<ScoringMetrics[]> => {
     }], { onConflict: 'team_id,candidate_id' });
 
     if (error) throw new Error(`Failed to save report: ${error.message}`);
+
+    // Update job application status and notify candidates autonomously
+    if (job) {
+      const isPromoted = finalPercentile >= 80;
+      let newStatus = 'rejected';
+      
+      if (isPromoted) {
+        newStatus = teamRound === 1 ? 'round2_scheduled' : 'shortlisted_for_hr';
+      }
+
+      await supabaseAdmin
+        .from('job_applications')
+        .update({ status: newStatus })
+        .eq('job_id', job.id)
+        .eq('candidate_id', candidateId);
+
+      if (newStatus === 'round2_scheduled') {
+        // Form a Round 2 Team chamber
+        const r2Team = await createTeam(assessment.id, [candidateId], job.employer_id || employerId, 2);
+        
+        await supabaseAdmin.from('notifications').insert([{
+          recipient_id: candidateId,
+          title: `Promoted to Round 2: ${job.title}`,
+          message: `Congratulations! You scored ${finalPercentile}% in Round 1. AI HireHub has scheduled you for Round 2 (Advanced Stack-Specific Sandbox). Join Sandbox with UID: ${r2Team.id}.`,
+          type: 'success',
+          metadata: {
+            uid: r2Team.id,
+            job_id: job.id,
+            job_title: job.title,
+            round: 2
+          }
+        }]);
+      } else if (newStatus === 'shortlisted_for_hr') {
+        await supabaseAdmin.from('notifications').insert([{
+          recipient_id: candidateId,
+          title: `Shortlisted for HR Round: ${job.title}`,
+          message: `Outstanding! You scored ${finalPercentile}% in Round 2 Advanced Sandbox. Your application has been shortlisted for the final HR round.`,
+          type: 'success',
+          metadata: {
+            job_id: job.id,
+            job_title: job.title
+          }
+        }]);
+      } else {
+        // Rejected
+        await supabaseAdmin.from('notifications').insert([{
+          recipient_id: candidateId,
+          title: `Application Update: ${job.title}`,
+          message: `Thank you for completing the Round ${teamRound} evaluation. Unfortunately, your profile was not promoted. Feedback: Focus on improving collaboration fluency and telemetry consistency.`,
+          type: 'info',
+          metadata: {
+            job_id: job.id,
+            job_title: job.title
+          }
+        }]);
+      }
+    }
 
     results.push({ coding_correctness: codingCorrectness, ai_collaboration_fluency: aiFluency, keystroke_integrity: integrity, final_percentile: finalPercentile, report_json: reportJson, soft_skill_score: softSkillScore } as any);
   }

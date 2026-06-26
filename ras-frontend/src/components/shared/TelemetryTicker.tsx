@@ -92,7 +92,7 @@ export default function TelemetryTicker() {
                 </div>
                 <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 uppercase tracking-widest">
                   <Terminal className="w-3 h-3" />
-                  redrob@sandbox:~ telemetry-logs
+                  hirehub@sandbox:~ telemetry-logs
                 </div>
                 <div className="w-12" /> {/* spacer */}
               </div>

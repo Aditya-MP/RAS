@@ -43,6 +43,28 @@ export const setupWebSocketServer = (server: any) => {
       clients.set(clientId, { ws, userId, teamId });
       logger.info(`WebSocket connected: ${clientId}`);
 
+      // Automatically activate team session if it's currently pending
+      try {
+        const { data: teamData } = await supabaseAdmin
+          .from('teams')
+          .select('status')
+          .eq('id', teamId)
+          .single();
+        
+        if (teamData && teamData.status === 'pending') {
+          await supabaseAdmin
+            .from('teams')
+            .update({
+              status: 'active',
+              session_start: new Date().toISOString()
+            })
+            .eq('id', teamId);
+          logger.info(`Automatically activated team session for team ${teamId} upon candidate connection`);
+        }
+      } catch (err: any) {
+        logger.error(`Error auto-activating team session: ${err.message}`);
+      }
+
       ws.send(JSON.stringify({ status: 'connected', teamId, userId }));
 
       ws.on('message', async (data: any) => {
@@ -121,7 +143,8 @@ export const setupWebSocketServer = (server: any) => {
     }
   });
 
-  logger.info('WebSocket server ready at ws://localhost/ws');
+  const port = process.env.PORT || 5000;
+  logger.info(`WebSocket server ready at ws://localhost:${port}/ws`);
   return wss;
 };
 

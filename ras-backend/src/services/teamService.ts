@@ -3,7 +3,8 @@ import { supabaseAdmin } from '../config/supabase';
 export const createTeam = async (
   assessmentId: string,
   candidateIds: string[],
-  employerId: string
+  employerId: string,
+  round: number = 1
 ) => {
   // Verify the assessment belongs to this employer
   const { data: assessment, error: assessError } = await supabaseAdmin
@@ -25,8 +26,8 @@ export const createTeam = async (
     throw new Error(`Maximum ${assessment.max_candidates} candidates allowed per team`);
   }
 
-  if (candidateIds.length < 2) {
-    throw new Error('At least 2 candidates are required to form a team');
+  if (candidateIds.length < 1) {
+    throw new Error('At least 1 candidate is required to form a team');
   }
 
   // Create the team
@@ -34,7 +35,8 @@ export const createTeam = async (
     .from('teams')
     .insert([{
       assessment_id: assessmentId,
-      status: 'pending'
+      status: 'pending',
+      round: round
     }])
     .select()
     .single();

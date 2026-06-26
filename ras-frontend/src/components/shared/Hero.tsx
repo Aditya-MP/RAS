@@ -91,7 +91,7 @@ export default function Hero() {
               transition={{ duration: 0.8, delay: 0.25 }}
               className="text-base sm:text-lg text-slate-300 max-w-xl leading-relaxed font-sans"
             >
-              Redrob Sandbox is the AI recruiter that screens, interviews, and shortlists candidates for your team—without the spreadsheet chaos or biased guesswork.
+              AI HireHub is the autonomous AI recruiter that screens, schedules, groups, and evaluates technical candidates for your team—on autopilot.
             </motion.p>
 
             {/* Action Buttons */}
@@ -102,7 +102,7 @@ export default function Hero() {
               className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
             >
               <button className="w-full sm:w-auto text-sm font-bold text-slate-950 px-8 py-4 bg-accent hover:bg-accent/90 rounded-full shadow-lg shadow-accent/20 hover:shadow-accent/40 hover:-translate-y-0.5 active:translate-y-0 hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-1.5 group cursor-pointer">
-                Start hiring with Redrob
+                Start hiring with AI HireHub
                 <ArrowRight className="w-4 h-4 text-slate-950 group-hover:translate-x-0.5 transition-transform" />
               </button>
               <button 

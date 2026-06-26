@@ -46,10 +46,10 @@ export default function SignUpPage() {
         <div className="flex flex-col items-center text-center gap-2">
           <Link href="/" className="flex items-center gap-2 mb-2 group">
             <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center font-bold text-black group-hover:scale-105 transition-transform font-outfit shadow-lg shadow-accent/25">
-              R
+              H
             </div>
             <span className="font-extrabold font-outfit text-white tracking-tight text-xl">
-              Redrob <span className="text-accent">Sandbox</span>
+              AI <span className="text-accent">HireHub</span>
             </span>
           </Link>
           <h1 className="text-2xl font-bold font-outfit text-white">Create account</h1>

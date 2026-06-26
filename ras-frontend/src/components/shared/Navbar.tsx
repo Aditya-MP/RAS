@@ -38,7 +38,7 @@ export default function Navbar() {
             <Cpu className="w-5 h-5 text-accent" />
           </div>
           <span className="text-xl font-bold font-outfit tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-            Redrob <span className="text-accent transition-colors duration-500">Sandbox</span>
+            AI <span className="text-accent transition-colors duration-500">HireHub</span>
           </span>
         </Link>
 

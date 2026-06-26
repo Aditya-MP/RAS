@@ -181,10 +181,10 @@ export default function PeerReviewPage() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between h-16 w-full">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded bg-accent flex items-center justify-center font-bold text-black font-outfit text-sm">
-              R
+              H
             </div>
             <span className="font-extrabold font-outfit text-white text-base">
-              Redrob <span className="text-accent">Sandbox</span>
+              AI <span className="text-accent">HireHub</span>
             </span>
           </div>
         </div>
