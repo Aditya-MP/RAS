@@ -253,6 +253,12 @@ export default function CandidateDashboard() {
     fetchNotifications();
   }, [profile, token, router, fetchTeams, fetchJobs, fetchNotifications]);
 
+  useEffect(() => {
+    if (activeTab === "notifications") {
+      fetchNotifications();
+    }
+  }, [activeTab, fetchNotifications]);
+
   // Handle Mock Payment Submit
   const handlePaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault();

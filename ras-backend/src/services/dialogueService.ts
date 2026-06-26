@@ -74,7 +74,7 @@ export const storeChatMessage = async (
       cognitive_state: classification.cognitive_state,
       telemetry_correlation: telemetryCorrelation,
     }])
-    .select()
+    .select('*, candidate:profiles!chat_messages_candidate_id_fkey(email, full_name, role)')
     .single();
 
   if (error) throw new Error(error.message);
@@ -104,12 +104,21 @@ export const getTeamMessages = async (teamId: string, requesterId: string) => {
 
   const { data, error } = await supabaseAdmin
     .from('chat_messages')
-    .select('*, candidate:profiles!chat_messages_candidate_id_fkey(email, full_name)')
+    .select('*, candidate:profiles!chat_messages_candidate_id_fkey(email, full_name, role)')
     .eq('team_id', teamId)
     .order('created_at', { ascending: true });
 
   if (error) throw new Error(error.message);
-  return data;
+  
+  return data.map((msg: any) => {
+    if (msg.candidate?.role === 'employer') {
+      return {
+        ...msg,
+        sender_name: 'Sarah'
+      };
+    }
+    return msg;
+  });
 };
 
 export const computeTelemetryCorrelation = async (

@@ -1,5 +1,7 @@
 import { supabaseAdmin } from '../config/supabase';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateAssessmentProject } from './geminiService';
+import logger from '../utils/logger';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite' });
@@ -49,7 +51,8 @@ export const createAssessment = async (employerId: string, payload: any) => {
     jd_text,
     seniority_level,
     tech_track,
-    max_candidates
+    max_candidates,
+    round = 1
   } = payload;
 
   // Validate required fields
@@ -57,10 +60,30 @@ export const createAssessment = async (employerId: string, payload: any) => {
     throw new Error('Missing required fields: title, jd_text, seniority_level, tech_track');
   }
 
+  // Validate round
+  if (![1, 2].includes(round)) {
+    throw new Error('Round must be 1 or 2');
+  }
+
   // Extract skills from job description using Gemini
   const extractedSkills = await extractSkillsWithGemini(jd_text);
 
-  const assessmentData = {
+  // Autonomously generate the coding challenge project template (RAG/Gemini generated)
+  // Round-specific: Round 2 generates harder challenges via the AI prompt
+  let generatedFiles = {};
+  try {
+    generatedFiles = await generateAssessmentProject(
+      title,
+      tech_track,
+      seniority_level,
+      jd_text || '',
+      round
+    );
+  } catch (genErr: any) {
+    logger.error(`Failed to pre-generate assessment project template: ${genErr.message}`);
+  }
+
+  const assessmentData: any = {
     employer_id: employerId,
     title,
     description: description || '',
@@ -69,13 +92,36 @@ export const createAssessment = async (employerId: string, payload: any) => {
     seniority_level,
     tech_track,
     max_candidates: max_candidates || 5,
+    round,
+    files: generatedFiles
   };
 
-  const { data, error } = await supabaseAdmin
+  let { data, error } = await supabaseAdmin
     .from('assessments')
     .insert([assessmentData])
     .select()
     .single();
+
+  if (error && error.message.includes('round')) {
+    // Fallback if 'round' column is missing from assessments
+    const fallbackData = { ...assessmentData };
+    delete fallbackData.round;
+    const fallbackQuery = await supabaseAdmin
+      .from('assessments')
+      .insert([fallbackData])
+      .select()
+      .single();
+
+    if (!fallbackQuery.error && fallbackQuery.data) {
+      data = {
+        ...fallbackQuery.data,
+        round: 1
+      };
+      error = null;
+    } else {
+      error = fallbackQuery.error;
+    }
+  }
 
   if (error) throw new Error(error.message);
   return data;
@@ -91,7 +137,10 @@ export const getAssessments = async (filters?: { employerId?: string }) => {
   const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return data;
+  return data ? data.map((item: any) => ({
+    ...item,
+    round: item.round !== undefined ? item.round : 1
+  })) : [];
 };
 
 export const getAssessmentById = async (id: string) => {
@@ -102,5 +151,5 @@ export const getAssessmentById = async (id: string) => {
     .single();
 
   if (error) throw new Error(error.message);
-  return data;
+  return data ? { ...data, round: data.round !== undefined ? data.round : 1 } : null;
 };

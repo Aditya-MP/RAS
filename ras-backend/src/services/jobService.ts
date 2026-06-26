@@ -60,22 +60,11 @@ export const getJobs = async (employerId?: string) => {
   if (error) throw new Error(error.message);
 
   return data.map((job: any) => {
-    let currentStatus = job.status;
-    if (job.status === 'open' && job.deadline && new Date() > new Date(job.deadline)) {
-      currentStatus = 'closed';
-      supabaseAdmin
-        .from('jobs')
-        .update({ status: 'closed' })
-        .eq('id', job.id)
-        .then(({ error: updateErr }) => {
-          if (updateErr) logger.error(`Failed to auto-expire job ${job.id}: ${updateErr.message}`);
-          else logger.info(`Auto-expired job ${job.id} on deadline match`);
-        });
-    }
+    const isExpired = job.status === 'open' && job.deadline && new Date() > new Date(job.deadline);
     const apps = job.job_applications || [];
     return {
       ...job,
-      status: currentStatus,
+      status: isExpired ? 'closed' : job.status,
       applicationCount: apps.length,
       job_applications: undefined
     };
@@ -96,7 +85,7 @@ export const createJobApplication = async (jobId: string, candidateId: string) =
   // Check if job exists and is open
   const { data: job, error: jobErr } = await supabaseAdmin
     .from('jobs')
-    .select('id, status, deadline')
+    .select('id, title, company, employer_id, status, deadline')
     .eq('id', jobId)
     .single();
 
@@ -120,6 +109,23 @@ export const createJobApplication = async (jobId: string, candidateId: string) =
     }
     throw new Error(error.message);
   }
+
+  // Send application confirmation notification to candidate
+  try {
+    await createNotification(job.employer_id, {
+      recipient_id: candidateId,
+      title: `Application Submitted: ${job.title}`,
+      message: `Thank you for applying to the "${job.title}" position at "${job.company}". Your application has been successfully received, and you will be notified once the employer reviews profiles and schedules the assessment sandbox.`,
+      type: 'info',
+      metadata: {
+        job_id: jobId,
+        job_title: job.title
+      }
+    });
+  } catch (notifErr: any) {
+    logger.error(`Failed to send application confirmation notification to candidate ${candidateId}: ${notifErr.message}`);
+  }
+
   return data;
 };
 
@@ -203,14 +209,28 @@ export const scheduleJobAndFormTeams = async (
     throw new Error('No candidates have applied to this job posting yet');
   }
 
-  // 3. Shuffle candidate list for random team formation
+  // ────────────────────────────────────────────────────────
+  // Fetch candidate profiles once
+  // ────────────────────────────────────────────────────────
+  const { data: allProfiles } = await supabaseAdmin
+    .from('profiles')
+    .select('id, full_name')
+    .in('id', candidateIds);
+
+  const profileMap = new Map<string, string>();
+  for (const p of (allProfiles || [])) {
+    profileMap.set(p.id, p.full_name || 'Candidate');
+  }
+
+  // ────────────────────────────────────────────────────────
+  // Form teams first
+  // ────────────────────────────────────────────────────────
   const shuffledCandidates = [...candidateIds];
   for (let i = shuffledCandidates.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffledCandidates[i], shuffledCandidates[j]] = [shuffledCandidates[j], shuffledCandidates[i]];
   }
 
-  // 4. Determine division/group size
   const N = shuffledCandidates.length;
   let k = Math.round(N / 4);
   if (k < 1) k = 1;
@@ -225,63 +245,66 @@ export const scheduleJobAndFormTeams = async (
     startIndex += groupSize;
   }
 
-  // Fetch profiles of candidates to get their full names
-  const { data: profiles, error: profilesError } = await supabaseAdmin
-    .from('profiles')
-    .select('id, full_name')
-    .in('id', candidateIds);
+  const { data: teamAssessment } = await supabaseAdmin
+    .from('assessments')
+    .select('round')
+    .eq('id', job.assessment_id)
+    .single();
+  const assessmentRound = teamAssessment?.round || 1;
 
-  if (profilesError) {
-    throw new Error(profilesError.message);
-  }
-
-  const profileMap = new Map<string, string>();
-  for (const p of (profiles || [])) {
-    profileMap.set(p.id, p.full_name || 'Candidate');
-  }
-
+  // candidateId → teamId mapping
+  const teamMap = new Map<string, string>();
   const createdTeams = [];
 
-  // 5. Form teams and notify candidates
   for (let i = 0; i < groups.length; i++) {
     const group = groups[i];
-    const team = await createTeam(job.assessment_id, group, employerId);
+    try {
+      const team = await createTeam(job.assessment_id, group, employerId, assessmentRound);
+      for (const cid of group) teamMap.set(cid, team.id);
+      createdTeams.push(team);
+    } catch (teamErr: any) {
+      logger.error(`Failed to create team for group ${i} of job ${jobId}: ${teamErr.message}`);
+    }
+  }
 
-    // Create notifications for each participant in the group
-    for (const candidateId of group) {
-      const candidateName = profileMap.get(candidateId) || 'Candidate';
-      
-      // Call AI to generate personalized notification title/message
+  // ────────────────────────────────────────────────────────
+  // Send ONE notification per candidate with all details
+  // ────────────────────────────────────────────────────────
+  for (const candidateId of candidateIds) {
+    const candidateName = profileMap.get(candidateId) || 'Candidate';
+    const teamId = teamMap.get(candidateId);
+
+    let title: string;
+    let message: string;
+
+    if (teamId) {
       const aiNotif = await generatePersonalizedNotification(
-        candidateName,
-        job.title,
-        job.company,
-        timeSlot,
-        team.id
+        candidateName, job.title, job.company, timeSlot, teamId
       );
+      title = aiNotif.title;
+      message = aiNotif.message;
+    } else {
+      title = `Assessment Scheduled: ${job.title}`;
+      message = `Hello ${candidateName}, the job posting for "${job.title}" at "${job.company}" has closed. You have been scheduled for Round 1 but team assignment encountered an issue. Please contact support for your chamber details.`;
+    }
 
+    try {
       await createNotification(employerId, {
         recipient_id: candidateId,
-        title: aiNotif.title,
-        message: aiNotif.message,
+        title,
+        message,
         type: 'alert',
         metadata: {
-          uid: team.id,
+          uid: teamId || null,
           time_slot: timeSlot,
           job_id: jobId,
           job_title: job.title
         }
       });
+    } catch (notifErr: any) {
+      logger.error(`Failed to send notification to candidate ${candidateId}: ${notifErr.message}`);
     }
-
-    createdTeams.push(team);
   }
-
-  // 6. Close the job posting since scheduling is done
-  await supabaseAdmin
-    .from('jobs')
-    .update({ status: 'closed' })
-    .eq('id', jobId);
 
   return {
     teams: createdTeams,

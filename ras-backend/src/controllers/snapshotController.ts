@@ -39,7 +39,7 @@ export const listByTeam = async (req: Request, res: Response) => {
     let snapshots = await getSnapshotsByTeam(teamId, requesterId);
 
     if (snapshots.length === 0) {
-      // Fetch team details and assessment context to trigger project generation
+      // Fetch team details and assessment context containing the prepared template files
       const { data: team } = await supabaseAdmin
         .from('teams')
         .select('*, assessment:assessments!inner(*)')
@@ -49,14 +49,21 @@ export const listByTeam = async (req: Request, res: Response) => {
       if (team) {
         const assessment = Array.isArray(team.assessment) ? team.assessment[0] : team.assessment;
         if (assessment) {
-          const generatedFiles = await generateAssessmentProject(
-            assessment.title,
-            assessment.tech_track,
-            assessment.seniority_level,
-            assessment.jd_text || ''
-          );
-          // Save and store initial generated files as the first code snapshot
-          const firstSnapshot = await saveSnapshot(teamId, requesterId, generatedFiles);
+          // If files exist in the prepared assessment template, use them!
+          let projectFiles = assessment.files;
+          
+          // Fallback just in case files are empty or not populated
+          if (!projectFiles || Object.keys(projectFiles).length === 0) {
+            projectFiles = await generateAssessmentProject(
+              assessment.title,
+              assessment.tech_track,
+              assessment.seniority_level,
+              assessment.jd_text || ''
+            );
+          }
+          
+          // Save and store initial files as the first code snapshot
+          const firstSnapshot = await saveSnapshot(teamId, requesterId, projectFiles);
           snapshots = [firstSnapshot];
         }
       }

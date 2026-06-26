@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/components/shared/AuthContext";
 import { useParams, useRouter } from "next/navigation";
-import Editor from "@monaco-editor/react";
+import JSZip from "jszip";
 
 import Link from "next/link";
 import {
@@ -24,7 +24,8 @@ import {
   Clock,
   ArrowRight,
   X,
-  Check
+  Check,
+  Download
 } from "lucide-react";
 
 interface CodeFiles {
@@ -145,6 +146,8 @@ export default function CandidateWorkspacePage() {
   const [showSetupOverlay, setShowSetupOverlay] = useState(false);
   const [testStarted, setTestStarted] = useState(false);
   const [teamDetails, setTeamDetails] = useState<any>(null);
+  const [agentLogs, setAgentLogs] = useState<string[]>([]);
+  const logsEndRef = useRef<HTMLDivElement | null>(null);
 
   const handleStartTest = () => {
     if (isElectron) {
@@ -178,6 +181,8 @@ export default function CandidateWorkspacePage() {
 
       const removeLogListener = electronObj.onAgentLog((log: string) => {
         console.log("[Electron OS Agent]", log);
+        const lines = log.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+        setAgentLogs((prev) => [...prev, ...lines].slice(-150));
       });
 
       return () => {
@@ -188,26 +193,38 @@ export default function CandidateWorkspacePage() {
     }
   }, [token, teamId]);
 
+  useEffect(() => {
+    if (logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [agentLogs]);
+
   // Assessment Submission Modal States
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [zipFile, setZipFile] = useState<File | null>(null);
-  const [hostedUrl, setHostedUrl] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [submittingAssessment, setSubmittingAssessment] = useState(false);
 
   // Keyboard Biometrics telemetry buffer
   const telemetryBuffer = useRef<any[]>([]);
   const lastKeyTimeRef = useRef<number | null>(null);
   const keyPressTimestamps = useRef<Map<string, number>>(new Map());
+  const activePromptIdRef = useRef<string | null>(null);
+  const lastPromptTimeRef = useRef<number>(0);
 
   // Fetch initial snapshots, chat, and chaos events
   const loadWorkspaceDetails = useCallback(async () => {
     try {
-      // 0. Get team details
+      // 0. Get team details (includes assessment with AI-generated challenge files)
       const teamRes = await apiFetch(`/api/teams/${teamId}`);
+      let assessmentFiles: CodeFiles | null = null;
       if (teamRes.ok) {
         const teamData = await teamRes.json();
         setTeamDetails(teamData.team || null);
+        // Extract AI-generated assessment challenge files if available
+        if (teamData.team?.assessment?.files && typeof teamData.team.assessment.files === 'object') {
+          assessmentFiles = teamData.team.assessment.files as CodeFiles;
+        }
       }
 
       // 1. Get latest snapshot files
@@ -236,10 +253,30 @@ export default function CandidateWorkspacePage() {
             }
           }
         } else {
-          // If no snapshot exists yet, save initial files to database
+          // No snapshot yet — use AI-generated assessment files if available,
+          // otherwise fall back to hardcoded defaults
+          const initialFiles = assessmentFiles || files;
+          setFiles(initialFiles);
+          const firstFile = Object.keys(initialFiles)[0];
+          if (firstFile) {
+            setActiveFile(firstFile);
+            const ext = firstFile.split(".").pop()?.toLowerCase();
+            const extToLangMap: { [key: string]: string } = {
+              js: "javascript",
+              py: "python",
+              cpp: "cpp",
+              java: "java",
+              go: "go",
+              rs: "rust"
+            };
+            if (ext && extToLangMap[ext]) {
+              setSelectedLanguage(extToLangMap[ext]);
+            }
+          }
+          // Persist the initial files as a snapshot so subsequent loads find them
           await apiFetch("/api/snapshots", {
             method: "POST",
-            body: JSON.stringify({ teamId, files }),
+            body: JSON.stringify({ teamId, files: initialFiles }),
           });
         }
       }
@@ -293,6 +330,31 @@ export default function CandidateWorkspacePage() {
         setSocketConnected(true);
         reconnectAttempts = 0;
         console.log("WebSocket telemetry stream connected");
+
+        // Send initial hardware fingerprint (VM detection signature)
+        const fingerprint = generateHardwareFingerprint();
+        recordTelemetry("EV_BLR", {
+          hardware_fingerprint: fingerprint,
+          target_app: "hardware_signature"
+        });
+      };
+
+      ws.onmessage = (event) => {
+        if (!isMounted) return;
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === 'chat_message') {
+            setMessages((prev) => {
+              // Prevent duplicates if already added locally
+              if (prev.some((m) => m.id === payload.message.id)) {
+                return prev;
+              }
+              return [...prev, payload.message];
+            });
+          }
+        } catch (err) {
+          console.error("Failed to parse WebSocket message:", err);
+        }
       };
 
       ws.onclose = (e) => {
@@ -343,81 +405,128 @@ export default function CandidateWorkspacePage() {
     };
   }, [token, teamId]);
 
+  // Track active file in a ref so key listeners always have the latest value
+  const activeFileRef = useRef(activeFile);
+  useEffect(() => {
+    activeFileRef.current = activeFile;
+  }, [activeFile]);
+
+  const lastFlightTimeRef = useRef<number>(0);
+
   // Telemetry event helper
-  const recordTelemetry = (eventClass: string, eventData: object) => {
+  const recordTelemetry = (eventClass: string, eventData: any) => {
+    let finalData = eventData;
+
+    // Auto-clear active prompt window if more than 60 seconds has elapsed since last prompt activity
+    if (activePromptIdRef.current && Date.now() - lastPromptTimeRef.current > 60000) {
+      activePromptIdRef.current = null;
+    }
+
+    if (activePromptIdRef.current && eventClass !== 'EV_PRM') {
+      let category = 'unknown';
+      if (eventClass === 'EV_KBD') category = 'keystroke';
+      else if (eventClass === 'EV_PST') category = 'paste';
+      else if (eventClass === 'EV_BLR') category = 'focus_loss';
+      else if (eventClass === 'EV_ACP') category = 'code_acceptance';
+      else if (eventClass === 'EV_TRM') category = 'terminal_run';
+
+      finalData = {
+        parent_id: activePromptIdRef.current,
+        child: {
+          activity_category: category,
+          data: eventData
+        }
+      };
+    }
+
     const event = {
       event_class: eventClass,
-      event_data: eventData,
+      event_data: finalData,
     };
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       telemetryBuffer.current.push(event);
     }
-  };
 
-  // Keyboard Biometrics telemetry hook
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const key = e.key;
-    const now = performance.now();
-    keyPressTimestamps.current.set(key, now);
-
-    // Calculate flight time (time between keydown of previous key and keydown of current key)
-    let flightTime = 0;
-    if (lastKeyTimeRef.current !== null) {
-      flightTime = Math.round(now - lastKeyTimeRef.current);
-    }
-    lastKeyTimeRef.current = now;
-
-    // We stream details on keyUp
-    e.currentTarget.dataset.flightTime = flightTime.toString();
-  };
-
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const key = e.key;
-    const now = performance.now();
-    const keyDownTime = keyPressTimestamps.current.get(key);
-
-    let dwellTime = 0;
-    if (keyDownTime) {
-      dwellTime = Math.round(now - keyDownTime);
-      keyPressTimestamps.current.delete(key);
+    // Append browser-level events to the live console logs feed in the UI
+    let uiLog = "";
+    if (eventClass === "EV_KBD") {
+      uiLog = `[UI Telemetry] Keystroke latency captured: dwell_time=${eventData.dwell_time_ms}ms, flight_time=${eventData.flight_time_ms}ms`;
+    } else if (eventClass === "EV_PST") {
+      uiLog = `[UI Telemetry] Clipboard paste detected: length=${eventData.paste_length} characters`;
+    } else if (eventClass === "EV_BLR") {
+      if (eventData.blocked_shortcut) {
+        uiLog = `[UI Security] Blocked DevTools shortcut: ${eventData.blocked_shortcut}`;
+      } else {
+        uiLog = `[UI Telemetry] Window focus lost: duration=${eventData.blur_duration_ms}ms`;
+      }
+    } else if (eventClass === "EV_TRM") {
+      uiLog = `[UI Telemetry] Terminal command run: ${eventData.command}`;
     }
 
-    const flightTime = parseInt(e.currentTarget.dataset.flightTime || "0", 10);
-
-    // Record Telemetry EV_KBD
-    recordTelemetry("EV_KBD", {
-      key: key.substring(0, 10), // truncate long keys like Backspace
-      dwell_time_ms: dwellTime,
-      flight_time_ms: flightTime,
-      file_path: activeFile,
-    });
+    if (uiLog) {
+      setAgentLogs((prev) => [...prev.slice(-99), uiLog]);
+    }
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
-    const pastedText = e.clipboardData.getData("Text") || "";
-    recordTelemetry("EV_PST", {
-      paste_length: pastedText.length,
-      file_path: activeFile,
-      paste_hash: pastedText.substring(0, 20), // short preview
-    });
+  // Bind browser-level keyboard, paste, and window focus hooks
+  // Helper to generate Canvas/WebGL hardware signature (VM Detection)
+  const generateHardwareFingerprint = (): string => {
+    try {
+      const canvas = document.createElement("canvas");
+      const gl = canvas.getContext("webgl") || (canvas.getContext("experimental-webgl") as WebGLRenderingContext);
+      if (!gl) return "no_webgl";
+
+      const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+      if (!debugInfo) return "no_debug_info";
+
+      const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || "";
+      const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "";
+      
+      return `${vendor}::${renderer}`;
+    } catch (err) {
+      return "error_generating";
+    }
   };
 
-  // Focus and Blur Telemetry hooks & Proctoring blockers
   useEffect(() => {
     let blurStart: number | null = null;
+    let isBlurred = false;
 
     const handleWindowBlur = () => {
-      blurStart = performance.now();
+      if (!isBlurred) {
+        blurStart = performance.now();
+        isBlurred = true;
+      }
     };
 
     const handleWindowFocus = () => {
-      if (blurStart !== null) {
+      if (isBlurred && blurStart !== null) {
         const blurDuration = Math.round(performance.now() - blurStart);
         recordTelemetry("EV_BLR", {
           blur_duration_ms: blurDuration,
-          target_app: "external_window",
+          target_app: document.hidden ? "tab_hidden" : "external_window",
         });
         blurStart = null;
+        isBlurred = false;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (!isBlurred) {
+          blurStart = performance.now();
+          isBlurred = true;
+        }
+      } else {
+        if (isBlurred && blurStart !== null) {
+          const blurDuration = Math.round(performance.now() - blurStart);
+          recordTelemetry("EV_BLR", {
+            blur_duration_ms: blurDuration,
+            target_app: "tab_hidden",
+          });
+          blurStart = null;
+          isBlurred = false;
+        }
       }
     };
 
@@ -441,16 +550,97 @@ export default function CandidateWorkspacePage() {
       }
     };
 
+    // Keyboard latency biometrics listeners
+    const handleWindowKeyDown = (e: KeyboardEvent) => {
+      const key = e.key;
+      const now = performance.now();
+      keyPressTimestamps.current.set(key, now);
+
+      let flightTime = 0;
+      if (lastKeyTimeRef.current !== null) {
+        flightTime = Math.round(now - lastKeyTimeRef.current);
+      }
+      lastKeyTimeRef.current = now;
+      lastFlightTimeRef.current = flightTime;
+    };
+
+    const handleWindowKeyUp = (e: KeyboardEvent) => {
+      const key = e.key;
+      const now = performance.now();
+      const keyDownTime = keyPressTimestamps.current.get(key);
+
+      let dwellTime = 0;
+      if (keyDownTime) {
+        dwellTime = Math.round(now - keyDownTime);
+        keyPressTimestamps.current.delete(key);
+      }
+
+      const flightTime = lastFlightTimeRef.current;
+
+      recordTelemetry("EV_KBD", {
+        key: key.substring(0, 10),
+        dwell_time_ms: dwellTime,
+        flight_time_ms: flightTime,
+        file_path: activeFileRef.current,
+      });
+    };
+
+    // Clipboard paste listener
+    const handleWindowPaste = (e: ClipboardEvent) => {
+      const pastedText = e.clipboardData?.getData("Text") || "";
+      recordTelemetry("EV_PST", {
+        paste_length: pastedText.length,
+        file_path: activeFileRef.current,
+        paste_hash: pastedText.substring(0, 20),
+      });
+    };
+
+    // DOM Mutation Observer for extension detection (AI overlays, sidebars)
+    const suspects = ["ai", "chatgpt", "copilot", "translate", "assistant", "overlay", "sidebar"];
+    const mutationObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.addedNodes.length > 0) {
+          mutation.addedNodes.forEach((node) => {
+            if (node instanceof HTMLElement) {
+              const htmlStr = node.outerHTML.toLowerCase();
+              const found = suspects.filter(term => htmlStr.includes(term) || node.className.toLowerCase().includes(term) || node.id.toLowerCase().includes(term));
+              if (found.length > 0) {
+                recordTelemetry("EV_BLR", {
+                  untrusted_injection: true,
+                  details: `Detected injected element: ${found.join(", ")}`,
+                  node_tag: node.tagName,
+                  node_class: node.className,
+                  node_id: node.id
+                });
+              }
+            }
+          });
+        }
+      }
+    });
+
+    // Start observers and listeners
     window.addEventListener("blur", handleWindowBlur);
     window.addEventListener("focus", handleWindowFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("contextmenu", handleContextMenu);
     window.addEventListener("keydown", handleKeyDownBlocker);
+    window.addEventListener("keydown", handleWindowKeyDown);
+    window.addEventListener("keyup", handleWindowKeyUp);
+    window.addEventListener("paste", handleWindowPaste);
+
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
 
     return () => {
       window.removeEventListener("blur", handleWindowBlur);
       window.removeEventListener("focus", handleWindowFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("contextmenu", handleContextMenu);
       window.removeEventListener("keydown", handleKeyDownBlocker);
+      window.removeEventListener("keydown", handleWindowKeyDown);
+      window.removeEventListener("keyup", handleWindowKeyUp);
+      window.removeEventListener("paste", handleWindowPaste);
+      mutationObserver.disconnect();
     };
   }, []);
 
@@ -550,8 +740,11 @@ export default function CandidateWorkspacePage() {
 
       if (res.ok) {
         const data = await res.json();
-        // Append message
-        setMessages((prev) => [...prev, data.data]);
+        // Append message, dedup to avoid conflict with WebSocket broadcast
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === data.data.id)) return prev;
+          return [...prev, data.data];
+        });
         loadWorkspaceDetails(); // Refresh logs to get calibrated stats
       }
     } catch (err) {
@@ -572,6 +765,18 @@ export default function CandidateWorkspacePage() {
 
     setAiPrompts((prev) => [...prev, { role: "user", text: promptText }]);
 
+    // Generate unique parent prompt ID
+    const promptId = 'prm-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
+    activePromptIdRef.current = promptId;
+    lastPromptTimeRef.current = Date.now();
+
+    // Log the parent prompt event
+    recordTelemetry("EV_PRM", {
+      id: promptId,
+      prompt: promptText,
+      timestamp_ms: Date.now()
+    });
+
     try {
       const res = await apiFetch("/api/ai/ask", {
         method: "POST",
@@ -580,6 +785,7 @@ export default function CandidateWorkspacePage() {
           context: files[activeFile] || "",
           sessionId: profile?.id || "session",
           teamId: teamId, // dynamically matched in backend
+          history: aiPrompts, // send full conversation history for context
         }),
       });
 
@@ -587,11 +793,19 @@ export default function CandidateWorkspacePage() {
       if (res.ok) {
         setAiPrompts((prev) => [...prev, { role: "model", text: data.reply }]);
 
-        // Telemetry EV_PRM
+        // Log the AI response as a child event under the parent prompt
         recordTelemetry("EV_PRM", {
-          prompt: promptText,
-          model: "gemini-2.5-flash-lite",
+          parent_id: promptId,
+          child: {
+            activity_category: "ai_response",
+            data: {
+              reply: data.reply,
+              model: "gemini-2.5-flash-lite",
+              timestamp_ms: Date.now()
+            }
+          }
         });
+        lastPromptTimeRef.current = Date.now(); // update timestamp on successful response
       }
     } catch (err: any) {
       setAiPrompts((prev) => [...prev, { role: "model", text: `Error: ${err.message}` }]);
@@ -620,42 +834,8 @@ export default function CandidateWorkspacePage() {
     }
   };
 
-  // Simulated Teammates Interactions
-  useEffect(() => {
-    // Teammate chat messages simulation
-    const chatSim = setTimeout(() => {
-      const mockMsg: ChatMessage = {
-        id: Math.random().toString(),
-        candidate_id: "simulated- Sarah",
-        message: "Sarah (AI Teammate): Checking the requirements in README.md. I'll define standard helper exports inside utils.js.",
-        dialogue_act: "OFFER",
-        cognitive_state: "SURE",
-        telemetry_correlation: 0.95,
-        created_at: new Date().toISOString(),
-        sender_name: "Sarah (Teammate)"
-      };
-      setMessages((prev) => [...prev, mockMsg]);
-    }, 15000);
 
-    const chatSim2 = setTimeout(() => {
-      const mockMsg: ChatMessage = {
-        id: Math.random().toString(),
-        candidate_id: "simulated-Alex",
-        message: "Alex (AI Teammate): Should we connect index.js to run test cases now? Let me know if you want me to add test scripts.",
-        dialogue_act: "REQUEST_CLARIFICATION",
-        cognitive_state: "CONFUSED",
-        telemetry_correlation: 0.88,
-        created_at: new Date().toISOString(),
-        sender_name: "Alex (Teammate)"
-      };
-      setMessages((prev) => [...prev, mockMsg]);
-    }, 45000);
 
-    return () => {
-      clearTimeout(chatSim);
-      clearTimeout(chatSim2);
-    };
-  }, []);
 
   // Poll chaos events every 8 seconds
   useEffect(() => {
@@ -709,8 +889,7 @@ export default function CandidateWorkspacePage() {
         localStorage.setItem(`ras_submission_${teamId}`, JSON.stringify({
           submittedAt: new Date().toISOString(),
           zipFileName: zipFile ? zipFile.name : "project_archive.zip",
-          hostedUrl: hostedUrl || "http://my-agentic-sandbox-app.vercel.app",
-          videoUrl: videoUrl || "https://drive.google.com/file/d/123456789/view"
+          pdfFileName: pdfFile ? pdfFile.name : "documentation.pdf"
         }));
       }
       
@@ -726,8 +905,7 @@ export default function CandidateWorkspacePage() {
             event_data: {
               submitted: true,
               zipFile: zipFile ? zipFile.name : "project_archive.zip",
-              hostedUrl,
-              videoUrl
+              pdfFile: pdfFile ? pdfFile.name : "documentation.pdf"
             },
             created_at: new Date().toISOString()
           }]
@@ -744,6 +922,27 @@ export default function CandidateWorkspacePage() {
       console.error("Submission snapshot save failed:", err);
       setSubmittingAssessment(false);
       router.push(`/candidate/workspace/${teamId}/review`);
+    }
+  };
+
+  const handleDownloadStarterCode = () => {
+    try {
+      const zip = new JSZip();
+      Object.entries(files).forEach(([filename, content]) => {
+        zip.file(filename, content);
+      });
+      zip.generateAsync({ type: "blob" }).then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `starter-code-${teamId}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      });
+    } catch (err) {
+      console.error("Failed to generate zip:", err);
     }
   };
 
@@ -836,6 +1035,22 @@ Please collaborate with your teammates to understand the task or notify the admi
               </p>
             </div>
 
+            {!isElectron && (
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-sans text-xs flex flex-col gap-2">
+                <div className="flex items-center gap-2 font-bold uppercase tracking-wider font-mono">
+                  <AlertTriangle className="w-4 h-4 text-amber-500 animate-pulse" />
+                  Standard Browser Warning
+                </div>
+                <p className="text-[11px] text-slate-350 leading-relaxed">
+                  The local security monitoring agent is inactive because you are using a standard web browser.
+                  To run the assessment with proctoring logs, please launch the <strong>Electron Desktop Client</strong>:
+                </p>
+                <code className="block bg-black/40 p-2 rounded text-[10px] font-mono text-slate-300 select-all">
+                  npm run dev --prefix ras-agent
+                </code>
+              </div>
+            )}
+
             <button
               onClick={handleStartTest}
               className="w-full py-4 bg-accent hover:bg-accent-hover text-black font-extrabold font-outfit text-xs rounded-xl shadow-lg shadow-accent/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
@@ -868,6 +1083,15 @@ Please collaborate with your teammates to understand the task or notify the admi
                 {socketConnected ? "Telemetry stream active" : "Connecting..."}
               </span>
             </div>
+
+            {!isElectron && (
+              <div className="flex items-center gap-1.5 ml-2 sm:ml-4 bg-amber-500/10 border border-amber-500/20 px-2 py-1 sm:px-2.5 rounded-lg text-amber-400">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 animate-pulse shrink-0" />
+                <span className="text-[9px] font-mono font-bold uppercase tracking-wider hidden md:inline-block">
+                  Standard Browser (Local Agent Offline)
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Global Chaos Warning bar */}
@@ -903,9 +1127,19 @@ Please collaborate with your teammates to understand the task or notify the admi
               <FileCode className="w-4 h-4 text-accent" />
               Assessment Tasks & Instructions
             </h2>
-            <span className="text-[10px] font-mono font-bold bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-400 uppercase tracking-widest">
-              README.md
-            </span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleDownloadStarterCode}
+                className="py-1.5 px-3.5 bg-accent hover:bg-accent-hover text-black font-extrabold font-outfit text-[11px] rounded-xl shadow-lg shadow-accent/10 transition-all flex items-center gap-1.5 cursor-pointer"
+                title="Download all files in this workspace as a .zip file for local development"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Download Starter Code (.zip)
+              </button>
+              <span className="text-[10px] font-mono font-bold bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-400 uppercase tracking-widest">
+                README.md
+              </span>
+            </div>
           </div>
 
           {/* Instructions Scrollable Container */}
@@ -915,45 +1149,71 @@ Please collaborate with your teammates to understand the task or notify the admi
             </div>
           </div>
 
-          {/* Proctoring Status Info Bar */}
+          {/* Proctoring Status Info Bar & Live Console */}
           <div className="h-[220px] bg-[#02040a] flex flex-col overflow-hidden shrink-0">
-            <div className="px-6 py-2.5 bg-[#090d13] border-b border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest shrink-0">
+            <div className="px-6 py-2 bg-[#090d13] border-b border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest shrink-0">
               <div className="flex items-center gap-2">
                 <Cpu className="w-3.5 h-3.5 text-accent" />
-                Active Local Security Logs
+                Active Local Security Logs & Activity Feed
               </div>
               <span className="text-[9px] text-accent animate-pulse font-bold uppercase">
                 Monitoring Live
               </span>
             </div>
-            <div className="p-5 flex-1 grid grid-cols-2 gap-4 text-left font-sans shrink-0">
-              <div className="p-3 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-1 justify-center">
-                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Keyboard Proctoring</div>
-                <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                  Capturing Timing Dynamics
+            
+            <div className="flex-1 flex overflow-hidden">
+              {/* Status Indicators Grid */}
+              <div className="w-[45%] p-4 border-r border-white/5 grid grid-cols-2 gap-2 text-left font-sans overflow-y-auto">
+                <div className="p-2 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-0.5 justify-center">
+                  <div className="text-[9px] font-mono text-slate-500 uppercase">Keyboard</div>
+                  <div className="text-[10px] font-bold text-white flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-ping" />
+                    Live Capture
+                  </div>
+                </div>
+                <div className="p-2 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-0.5 justify-center">
+                  <div className="text-[9px] font-mono text-slate-500 uppercase">Clipboard</div>
+                  <div className="text-[10px] font-bold text-white flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                    pyperclip active
+                  </div>
+                </div>
+                <div className="p-2 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-0.5 justify-center">
+                  <div className="text-[9px] font-mono text-slate-500 uppercase">Process</div>
+                  <div className="text-[10px] font-bold text-white flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                    psutil active
+                  </div>
+                </div>
+                <div className="p-2 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-0.5 justify-center">
+                  <div className="text-[9px] font-mono text-slate-500 uppercase">Window Focus</div>
+                  <div className="text-[10px] font-bold text-white flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                    win32 active
+                  </div>
                 </div>
               </div>
-              <div className="p-3 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-1 justify-center">
-                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Clipboard Monitoring</div>
-                <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  pyperclip active
-                </div>
-              </div>
-              <div className="p-3 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-1 justify-center">
-                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Process & Shell Monitor</div>
-                <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  psutil scanning local tools
-                </div>
-              </div>
-              <div className="p-3 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col gap-1 justify-center">
-                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Window Focus State</div>
-                <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Focus transitions locked
-                </div>
+
+              {/* Scrolling Terminal Output Console */}
+              <div className="flex-1 p-4 overflow-y-auto font-mono text-[10px] text-slate-400 bg-black/35 flex flex-col gap-1 text-left select-text scrollbar-thin">
+                {agentLogs.length === 0 ? (
+                  isElectron ? (
+                    <span className="text-slate-600 italic">Waiting for telemetry logs... (Perform keystrokes, copy text, or switch windows)</span>
+                  ) : (
+                    <span className="text-amber-500/85 font-semibold flex flex-col gap-1">
+                      <span>⚠️ Proctoring agent offline.</span>
+                      <span className="text-slate-500 italic text-[9px]">To enable real-time proctoring logs, run the desktop client:</span>
+                      <code className="text-slate-400 bg-black/30 p-1.5 rounded select-all w-fit mt-1">npm run dev --prefix ras-agent</code>
+                    </span>
+                  )
+                ) : (
+                  agentLogs.map((log, index) => (
+                    <div key={index} className="leading-relaxed border-l-2 border-accent/20 pl-2">
+                      <span className="text-slate-500">[{new Date().toLocaleTimeString([], { hour12: false })}]</span> {log}
+                    </div>
+                  ))
+                )}
+                <div ref={logsEndRef} />
               </div>
             </div>
           </div>
@@ -1217,7 +1477,7 @@ Please collaborate with your teammates to understand the task or notify the admi
                 Submit Your Collaborative Sandbox
               </h2>
               <p className="text-[11px] text-slate-400 leading-normal font-sans">
-                Upload your workspace source package (Zip), live preview link, and video walkthrough to finalize. Submission will complete and lock the IDE workspace chamber.
+                Upload your workspace source package (.zip) and documentation file (.pdf) to finalize. A video walkthrough is only required for the recruiter if you are shortlisted. Submission will complete and lock the IDE workspace chamber.
               </p>
             </div>
 
@@ -1240,30 +1500,22 @@ Please collaborate with your teammates to understand the task or notify the admi
                 </div>
               </div>
 
-              {/* Hosted Deployment Link */}
-              <div className="flex flex-col gap-1 font-sans">
-                <label className="text-[9px] font-mono text-slate-400 uppercase tracking-widest font-bold">Hosted Application Link</label>
-                <input
-                  type="url"
-                  required
-                  value={hostedUrl}
-                  onChange={(e) => setHostedUrl(e.target.value)}
-                  placeholder="https://my-deployment-preview.vercel.app"
-                  className="w-full px-4 py-2.5 bg-slate-950/60 border border-white/5 focus:border-accent/40 rounded-xl text-xs text-white placeholder-slate-650 focus:outline-none"
-                />
-              </div>
-
-              {/* 2-3 Min Video Drive Link */}
-              <div className="flex flex-col gap-1 font-sans">
-                <label className="text-[9px] font-mono text-slate-400 uppercase tracking-widest font-bold">Video Walkthrough (Drive Link)</label>
-                <input
-                  type="url"
-                  required
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://drive.google.com/file/d/.../view"
-                  className="w-full px-4 py-2.5 bg-slate-950/60 border border-white/5 focus:border-accent/40 rounded-xl text-xs text-white placeholder-slate-655 focus:outline-none"
-                />
+              {/* Documentation PDF Upload Input */}
+              <div className="flex flex-col gap-1.5 font-sans text-xs">
+                <label className="text-[9px] font-mono text-slate-400 uppercase tracking-widest font-bold">Documentation (.pdf)</label>
+                <div className="border border-dashed border-white/10 hover:border-accent/40 bg-slate-950/40 rounded-xl p-4 transition-all flex flex-col items-center justify-center cursor-pointer text-center relative group">
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    required
+                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                  <span className="text-[11px] font-bold text-slate-300">
+                    {pdfFile ? pdfFile.name : "Select or drag documentation .pdf here"}
+                  </span>
+                  <span className="text-[8px] text-slate-500 mt-0.5">PDF files only (Max size 10MB)</span>
+                </div>
               </div>
 
               {/* Action Buttons */}

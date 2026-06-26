@@ -89,6 +89,7 @@ def on_release(key):
             'timestamp_ms': int(time.time() * 1000),
             'dwell_time_ms': int(dwell_time_ms)
         })
+        print(f"[Agent] Keystroke timing captured: dwell_time={int(dwell_time_ms)}ms", flush=True)
     last_release_time = time.time()
 
 # Clipboard Monitor Polling Loop
@@ -104,6 +105,7 @@ def clipboard_monitor_loop():
                     'timestamp_ms': int(time.time() * 1000),
                     'content_length': len(curr_clip)
                 })
+                print(f"[Agent] Clipboard change recorded: length={len(curr_clip)} chars", flush=True)
         except Exception:
             pass
         time.sleep(1.0)
@@ -135,6 +137,7 @@ def process_monitor_loop():
                     'exit_code': 0,
                     'source': 'OS_AGENT_PROCESS_MONITOR'
                 })
+                print(f"[Agent] Security scanner flagged local tool launch: {proc_name}", flush=True)
             
             running_monitored = current_monitored
         except Exception:
@@ -166,6 +169,7 @@ def focus_monitor_loop():
                             'target_app': last_title
                         })
                     
+                    print(f"[Agent] Focus switched to: {title}", flush=True)
                     last_title = title
                     last_switch_time = now
         except Exception:

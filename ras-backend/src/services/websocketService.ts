@@ -120,6 +120,23 @@ export const setupWebSocketServer = (server: any) => {
             ws.send(JSON.stringify({ error: 'Failed to store events' }));
           } else {
             ws.send(JSON.stringify({ status: 'ok', count: rows.length }));
+
+            // Check if submission event is present
+            const isSubmitted = rows.some(
+              r => r.event_class === 'EV_ACP' && r.event_data?.submitted === true
+            );
+            if (isSubmitted) {
+              logger.info(`Detected EV_ACP submission event for team ${teamId}, triggering scoreTeam instantly...`);
+              import('./scoringService').then(async ({ scoreTeam }) => {
+                try {
+                  const results = await scoreTeam(teamId);
+                  logger.info(`Successfully completed instant scoring for team ${teamId}`);
+                  broadcastToTeam(teamId, { event: 'assessment_scored', teamId, results });
+                } catch (err: any) {
+                  logger.error(`Error scoring team ${teamId} instantly: ${err.message}`);
+                }
+              });
+            }
           }
         } catch (err: any) {
           logger.error('WebSocket message error:', err.message);

@@ -5,6 +5,10 @@ export interface KeystrokeFeatures {
   flightTimes: number[];
   pasteEvents: number;
   totalEvents: number;
+  focusLossCount?: number;
+  focusLossDuration?: number;
+  domInjections?: number;
+  virtualMachineHash?: boolean;
 }
 
 export interface AnomalyResult {
@@ -18,6 +22,9 @@ export interface AnomalyResult {
     flightIqr: number;
     pasteRatio: number;
     burstScore: number;
+    focusLossScore: number;
+    domInjectionScore: number;
+    vmScore: number;
   };
 }
 
@@ -114,7 +121,16 @@ function stats(arr: number[]): { mean: number; std: number; median: number; q1: 
 }
 
 export function analyzeKeystrokeAnomaly(features: KeystrokeFeatures): AnomalyResult {
-  const { dwellTimes, flightTimes, pasteEvents, totalEvents } = features;
+  const { 
+    dwellTimes, 
+    flightTimes, 
+    pasteEvents, 
+    totalEvents,
+    focusLossCount = 0,
+    focusLossDuration = 0,
+    domInjections = 0,
+    virtualMachineHash = false
+  } = features;
 
   const dwellStats = stats(dwellTimes);
   const flightStats = stats(flightTimes);
@@ -144,18 +160,37 @@ export function analyzeKeystrokeAnomaly(features: KeystrokeFeatures): AnomalyRes
     ? flightTimes.filter(t => t < 20).length / flightTimes.length
     : 0;
 
-  // Combined anomaly score (0-1, higher = more anomalous)
-  const anomalyScore = Math.min(
-    dwellZScore * 0.2 +
-    flightZScore * 0.25 +
-    iqrScore * 0.15 +
-    pasteScore * 0.2 +
-    burstScore * 0.2,
+  // Web-native focus loss penalty (Visibility API)
+  // Graded penalty: 5% per switch + linear scaling up to 5 minutes total hidden time
+  const focusLossScore = Math.min(focusLossCount * 0.05 + focusLossDuration / 300000, 1.0);
+
+  // DOM Injection Overlay check (Extension detection)
+  const domInjectionScore = domInjections > 0 ? 1.0 : 0.0;
+
+  // VM Detection (Canvas/WebGL hardware drivers)
+  const vmScore = virtualMachineHash ? 1.0 : 0.0;
+
+  // Combined baseline anomaly score (0-1) including focus loss as a 25% weight component
+  let anomalyScore = Math.min(
+    dwellZScore * 0.15 +
+    flightZScore * 0.20 +
+    iqrScore * 0.10 +
+    pasteScore * 0.15 +
+    burstScore * 0.15 +
+    focusLossScore * 0.25,
     1.0
   );
 
-  // Integrity score (inverse of anomaly)
-  const integrityScore = Math.max(1.0 - anomalyScore * 1.2, 0);
+  // Calculate integrity score (inverse of anomaly)
+  let integrityScore = Math.max(1.0 - anomalyScore * 1.2, 0);
+
+  // Apply multipliers for structural security violations
+  if (domInjectionScore > 0) {
+    integrityScore *= 0.5; // 50% penalty for AI extension DOM overlays
+  }
+  if (vmScore > 0) {
+    integrityScore *= 0.3; // 70% penalty for Virtual Machines (VirtualBox, VMware, etc.)
+  }
 
   // Confidence based on data volume
   const confidence = Math.min(
@@ -178,6 +213,9 @@ export function analyzeKeystrokeAnomaly(features: KeystrokeFeatures): AnomalyRes
       flightIqr: Math.round(flightIqr * 100) / 100,
       pasteRatio: Math.round(pasteRatio * 1000) / 1000,
       burstScore: Math.round(burstScore * 1000) / 1000,
+      focusLossScore: Math.round(focusLossScore * 1000) / 1000,
+      domInjectionScore: Math.round(domInjectionScore * 1000) / 1000,
+      vmScore: Math.round(vmScore * 1000) / 1000,
     },
   };
 }

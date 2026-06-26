@@ -42,7 +42,7 @@ export const getSnapshotsByTeam = async (teamId: string, requesterId: string) =>
     .from('code_snapshots')
     .select('*')
     .eq('team_id', teamId)
-    .order('created_at', { ascending: false });
+    .order('snapshot_time', { ascending: false });
 
   if (error) throw new Error(error.message);
   return data;

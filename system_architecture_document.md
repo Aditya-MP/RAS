@@ -45,11 +45,16 @@ Once registered, candidates are grouped into teams and assigned to an isolated w
 *   **Local Proxy Daemon:** A lightweight background process runs inside the container, listening to all file system edits, git commits, terminal inputs/outputs, and active terminal test commands.
 
 ### **Step 3: Collaborative Sandbox & Telemetry Stream**
-During the 90-minute sandbox assessment, the local proxy daemon stream-logs candidate workspace events to a secure time-series database. This telemetry stream includes:
+During the 90-minute sandbox assessment, the browser-native IDE and container-based workspace stream-logs candidate events to a secure database. Rather than relying on intrusive, local OS-level daemon installations, the platform captures high-integrity behavioral metrics via Web-Native API Algorithms:
 *   **Git Commits:** Frequency, commit messages, and specific code line diffs.
 *   **Terminal Telemetry:** Commands executed (e.g., `npm run test`, `python manage.py test`) and their corresponding exit codes.
 *   **AI Copilot Logs:** Prompts sent by candidates to the integrated AI coding assistant and the exact code blocks returned.
 *   **Chat Strings:** Text messages sent between team members in the IDE's built-in chat window.
+*   **State-Machine Focus Tracking (Visibility API):** Monitors window visibility state changes and blur/focus switches. Calculates a cumulative Anomaly Score ($A$) based on the frequency ($f$) and duration ($d$) of unfocused states:
+    $$A = \sum_{i=1}^{n} \left( w_1 \cdot f_i + w_2 \cdot \frac{d_i}{T} \right)$$
+*   **DOM Mutation Monitoring (Extension Detection):** Uses browser MutationObservers to detect unauthorized page modifications or code overlay helper widget injections from external AI browser extensions.
+*   **WebGL/Canvas Hardware Fingerprinting (VM Detection):** Passive 3D shapes and font anti-aliasing are drawn to a hidden `<canvas>` element on workspace launch. A SHA-256 hash of this hardware signature is calculated to identify hypervisor virtual machine graphic drivers (VirtualBox, VMware) vs. physical GPUs.
+
 
 ### **Step 4: The 4-State Ambient Tech Lead (ATL) Orchestrator**
 The **Ambient Tech Lead (ATL)** is a persistent, state-driven agent that interacts with the team inside their workspace. Instead of spamming candidates, the ATL runs on a 4-state state machine:
@@ -98,6 +103,82 @@ The top 10% of candidates from the standard screening (approximately 100 out of 
 The funnel culminates in a final human HR/management loop:
 *   **Step 7 (HR Interview):** The HR team is provided with telemetry-backed questions dynamically generated from the candidate's sandbox behavior (e.g., asking how they resolved a specific chaos event).
 *   **Verified Talent Passport:** Candidates who pass the sandbox but miss the final hiring slot due to headcount caps are issued a cryptographic **Developer Passport** showing their verified skills. Other companies on the platform can view these profiles and fast-track them past initial screens, creating a passive placement marketplace.
+
+---
+
+## **10. Autonomous Round Promotion & Round-Specific Assessment Generation**
+
+### **A. Round-Aware AI Assessment Generation**
+Each round generates its own assessment challenge with appropriate difficulty via `generateAssessmentProject()`:
+
+```
+Round 1 (Standard):   gemini-2.5-flash-lite → Moderate project for fundamentals evaluation
+Round 2 (Advanced):   gemini-2.5-pro         → Significantly harder project with complex
+                                                architectural challenges, edge cases,
+                                                performance constraints, advanced test scenarios
+```
+
+The `round` parameter (1 or 2) is passed through the pipeline:
+1. `createAssessment(employerId, { ..., round })` → stores `round` in the `assessments` table
+2. `generateAssessmentProject(title, track, seniority, jdText, round)` → AI generates difficulty-appropriate challenges
+3. Teams are validated to ensure `team.round === assessment.round`
+
+### **B. Autonomous Round 1 → Round 2 Promotion**
+When scoring completes for a Round 1 team:
+
+1. **Status Transition:** `round1_completed` → `round2_scheduled` (not a direct jump)
+2. **New Assessment Created:** The engine calls `createAssessment()` with `round: 2`, generating harder AI challenges specifically for the advanced round
+3. **New Team Chamber:** A Round 2 team is created linked to the new assessment, not Round 1's
+4. **Notification:** The candidate receives a success notification with the new workspace UID
+
+### **C. Round Eligibility & Role Validation**
+Every team creation enforces round consistency:
+
+| Check | Description |
+| :--- | :--- |
+| **Assessment Round Match** | `assessment.round` must equal `team.round` — prevents mismatched difficulty |
+| **Round 2 Prerequisite** | Candidates must have `round1_completed` or `round2_scheduled` status to join Round 2 |
+| **Employer Ownership** | The assessment must belong to the requesting employer (standard auth) |
+
+### **D. Job Application Status Progression**
+The platform tracks a complete status state machine:
+
+```
+applied → round1_completed → round2_scheduled → round2_completed → shortlisted_for_hr → hired
+                          ↘ rejected                  ↘ rejected
+```
+
+Each transition is recorded in the `job_applications.status` column, ensuring auditability of the candidate's journey through the assessment pipeline.
+
+### **E. Workspace Initialization: From AI-Generated Files to Candidate IDE**
+When a candidate enters a sandbox workspace, the system must deliver the AI-generated challenge files (including `test.js`) to their IDE. The initialization flow:
+
+```
+1. Assessment created → AI generates {README.md, index.js, utils.js, test.js}
+                                          ↓
+2. Team created → linked to assessment (which has the generated files)
+                                          ↓
+3. Candidate enters workspace → loadWorkspaceDetails() fires:
+     a. GET /api/teams/:teamId → returns assessment.files (AI-generated challenge)
+     b. GET /api/snapshots/team/:teamId → checks for saved progress
+     c. If NO snapshots exist → uses assessment.files as initial workspace content
+     d. Persists assessment files as first snapshot → candidate sees the actual challenge
+     e. If snapshots exist → restores candidate's saved progress
+```
+
+**Critical fix applied:** Previously, the frontend initialized with hardcoded boilerplate and never loaded the AI-generated `assessments.files` column. The candidate never saw the generated README, starter code, or test.js. Now:
+- `getTeamById()` selects `assessment.files, round` in addition to existing fields
+- Frontend `loadWorkspaceDetails()` uses assessment files as initial content when no snapshots exist
+- The AI-generated `test.js` with unit test assertions is delivered to the candidate's IDE
+
+### **F. Database Schema Additions**
+
+| Table | Column | Type | Description |
+| :--- | :--- | :--- | :--- |
+| `assessments` | `round` | `INT DEFAULT 1 CHECK (1,2)` | Which round this assessment belongs to |
+| `assessments` | `files` | `JSONB` | AI-generated challenge project files (README, index, utils, test) |
+| `teams` | `round` | `INT DEFAULT 1 CHECK (1,2)` | Which round this team chamber runs |
+| `job_applications` | `status` | `TEXT` with CHECK constraint | Progression through the assessment pipeline |
 
 ---
 

@@ -132,7 +132,8 @@ function startPythonAgent(wsUrl) {
     '--ws-url', wsUrl,
     '--db-path', dbPath
   ], {
-    cwd: __dirname
+    cwd: __dirname,
+    env: { ...process.env, PYTHONUNBUFFERED: '1' }
   });
 
   agentStatus = 'running';

@@ -26,12 +26,28 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
       // In dev mode, allow mock user when Supabase auth fails
       if (DEV_MODE && token === 'dev-mock-token') {
         req.user = { id: 'dev-user-id', email: 'dev@example.com', role: 'candidate' };
+        logger.info('Authenticated mock user in dev mode');
         return next();
       }
+      logger.warn(`Auth failed for token: ${error?.message || 'User not found'}`);
       return res.status(401).json({ error: 'Invalid or expired token' });
     }
 
-    req.user = { id: user.id, email: user.email, role: user.user_metadata?.role };
+    let role = user.user_metadata?.role;
+    if (!role) {
+      // Fallback: Query profiles table
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      if (profile) {
+        role = profile.role;
+      }
+    }
+
+    req.user = { id: user.id, email: user.email, role };
+    logger.info(`Authenticated user: id=${user.id}, email=${user.email}, role=${role}`);
     next();
   } catch (err: any) {
     logger.error('Auth service error:', err.message);

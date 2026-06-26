@@ -212,7 +212,7 @@ export default function NewAssessmentPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Gemini Extracting Skills...
+                  Extracting Skills & Pre-Generating Coding Sandbox...
                 </>
               ) : (
                 <>

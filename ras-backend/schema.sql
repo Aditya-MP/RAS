@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS public.assessments (
   seniority_level TEXT CHECK (seniority_level IN ('junior', 'mid', 'senior', 'lead')),
   tech_track TEXT CHECK (tech_track IN ('frontend', 'backend', 'devops', 'fullstack')),
   max_candidates INT DEFAULT 5,
+  round INT DEFAULT 1 CHECK (round IN (1, 2)),
+  files JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -128,6 +130,17 @@ CREATE TABLE IF NOT EXISTS public.resumes (
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(candidate_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  recipient_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT DEFAULT 'info' CHECK (type IN ('alert', 'info', 'success')),
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS public.jobs (

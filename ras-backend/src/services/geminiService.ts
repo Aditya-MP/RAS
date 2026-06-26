@@ -2,14 +2,15 @@ import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import Redis from 'ioredis';
 import logger from '../utils/logger';
 import { challengeSearch, SearchResult } from './vectorSearch';
-import { getSocraticFromOllama } from './ollamaService';
 
 const API_KEY = process.env.GEMINI_API_KEY!;
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
-// Define models for Round 1 (Flash-Lite) and Round 2 (Pro)
-const modelFlash = genAI?.getGenerativeModel({ model: 'gemini-2.5-flash-lite' }) || null;
-const modelPro = genAI?.getGenerativeModel({ model: 'gemini-2.5-pro' }) || null;
+// Model pool — gemini-2.5-flash is the only reliably available model on free tier.
+// flash-lite is kept as opportunistic secondary (intermittent 503s under high demand).
+// gemini-2.5-pro has 0 RPM on free tier so it is excluded.
+const modelPrimary = genAI?.getGenerativeModel({ model: 'gemini-2.5-flash' }) || null;
+const modelSecondary = genAI?.getGenerativeModel({ model: 'gemini-2.5-flash-lite' }) || null;
 
 // Redis cache — falls back to in-memory Map if Redis is not configured
 let redis: Redis | null = null;
@@ -50,82 +51,100 @@ interface SocraticRequest {
   context?: string;
   sessionId?: string;
   round?: 1 | 2;
+  history?: { role: 'user' | 'model'; text: string }[];
 }
 
 export const getSocraticResponse = async (params: SocraticRequest): Promise<string> => {
-  const { userPrompt, context = '', sessionId = 'default', round = 1 } = params;
+  const { userPrompt, context = '', sessionId = 'default', round = 1, history = [] } = params;
 
-  // Try local Ollama first (fast, private, zero-cost)
-  try {
-    const ollamaReply = await getSocraticFromOllama(userPrompt, context, round);
-    if (ollamaReply) {
-      await setCached(sessionId, `User asked: "${userPrompt}". AI responded.`);
-      return ollamaReply;
-    }
-  } catch (ollamaError) {
-    logger.warn('Ollama unavailable, falling back to Gemini:', (ollamaError as Error).message);
-  }
 
-  // Fallback to Gemini
-  if (!modelFlash || !modelPro) {
-    throw new Error('AI service unavailable: no Ollama or Gemini configured');
+  if (!genAI) {
+    throw new Error('AI service unavailable: Gemini API key is missing or not configured');
   }
 
   const SOCRATIC_SYSTEM_INSTRUCTION = `
-You are the Ambient Tech Lead (ATL R1) representing the hiring company's engineering leadership.
-Your role is to act as a Socratic Guide for Round 1 of the assessment.
+You are Sarah, a friendly senior developer on the candidate's team. You behave exactly like a text-based Alexa developer companion — smart, highly conversational, extremely helpful, and talking like a close friend.
+
+TONE & STYLE RULES:
+- Talk like a helpful friend in a text message. Speak in a warm, direct, and engaging manner.
+- Keep responses short and punchy (1 to 3 sentences maximum), exactly like an Alexa voice assistant answering a text request.
+- Use friendly developer emojis naturally (e.g., 🙂, 👍, 💻, 🚀) to stay casual and approachable.
+- Your name is Sarah. Introduce yourself simply as "Sarah" only at the very beginning of the test. Do not re-introduce yourself if conversation history exists.
+- Never mention corporate names, ATL, or ambient branding. You are a peer developer friend.
 
 SOCRATIC GUIDELINES:
-1. Explain the task clearly at the start.
-2. NEVER PROVIDE DIRECT CODE or ANSWERS. Do not output refactored code blocks, variables, or functions.
-3. Observe progress and provide conceptual, Socratic hints to guide the candidate. Ask questions that prompt logical analysis.
-4. Encourage collaboration and monitor engagement.
-5. Your tone should be friendly, empathetic, but guiding. Never solve the problem directly.
+1. Explain the task clearly at the start using the README.md files.
+2. NEVER PROVIDE RAW CODE or direct answers. Suggest directions, conceptual hints, or point out potential traps.
+3. Guide the candidate by asking helpful, clarifying questions that lead them to discover the solution.
+4. Keep the pace conversational and friendly.
 `;
 
   const STRICT_MANAGER_SYSTEM_INSTRUCTION = `
-You are the Senior Technical Lead and Evaluator (ATL R2) for Round 2 of the assessment.
-Your role is to act as a Strict Senior Manager and Evaluator.
+You are Sarah, the principal engineer evaluating this task. You behave like a strict but conversational Alexa-style assistant — professional, direct, punchy, and direct in a text format.
 
-STRICT MANAGER GUIDELINES:
-1. Present the complex problem at the start.
-2. Act as a strict evaluator. Probe deep architectural decisions.
-3. Never give any hints or direct answers under any circumstances.
-4. Ask deep architectural questions, probe edge cases, performance, security, and scalability constraints.
-5. Do not help the candidate code. Your evaluation is mathematical and extremely strict. Getting 60% or higher is very hard.
-6. Your tone is professional, critical, challenging, direct, and authoritative.
+TONE & STYLE RULES:
+- Talk like a high-level technical assistant friend. Speak in an authoritative yet conversational, helpful voice.
+- Keep replies very short and focused (1 to 3 sentences max), like Alexa answering a query.
+- Use casual developer punctuation or light emojis (e.g. 💻, ⚙️) but keep it critical and professional.
+- Introduce yourself as "Sarah" only once. Never mention corporate brands.
+
+EVALUATOR GUIDELINES:
+1. Present the hard engineering problem at the start.
+2. Probe architectural details, edge cases, scalability, and security choices.
+3. Do NOT give hints, code templates, or answers. Be an evaluator.
+4. Keep interactions direct and challenging.
 `;
 
   const isRound2 = round === 2;
   const sysInstruction = isRound2 ? STRICT_MANAGER_SYSTEM_INSTRUCTION : SOCRATIC_SYSTEM_INSTRUCTION;
-  const modelToUse = isRound2 ? modelPro : modelFlash;
 
   let fullPrompt = sysInstruction + '\n\n';
 
-  const cached = await getCached(sessionId);
-  if (cached) {
-    fullPrompt += `[Previous Context: ${cached}]\n\n`;
+  // Build multi-turn conversation history for context
+  if (history.length > 0) {
+    fullPrompt += `[Conversation History — DO NOT re-introduce yourself, you have already met the candidate]:\n`;
+    // Limit to last 20 turns to avoid token overflow
+    const recentHistory = history.slice(-20);
+    for (const turn of recentHistory) {
+      const speaker = turn.role === 'user' ? 'Candidate' : 'Sarah (You)';
+      fullPrompt += `${speaker}: ${turn.text}\n`;
+    }
+    fullPrompt += '\n';
   }
 
   if (context) {
-    fullPrompt += `[Current Context from Workspace]:\n${context}\n\n`;
+    fullPrompt += `[Current Code in Workspace Editor]:\n${context}\n\n`;
   }
 
-  fullPrompt += `[Candidate Question/Input]:\n${userPrompt}\n\n`;
-  fullPrompt += `[Response]: Provide your response now matching the guidelines.`;
+  fullPrompt += `[Candidate's Latest Message]:\n${userPrompt}\n\n`;
+  fullPrompt += `[Response]: Continue the conversation naturally. Do NOT re-introduce yourself if history exists above.`;
 
-  try {
-    const result = await modelToUse.generateContent(fullPrompt);
-    const text = result.response.text();
+  // Model cascade: gemini-2.5-flash (reliable) -> flash-lite (opportunistic fallback)
+  const modelsToTry = [
+    { model: modelPrimary, name: 'gemini-2.5-flash' },
+    { model: modelSecondary, name: 'gemini-2.5-flash-lite' }
+  ];
 
-    await setCached(sessionId, `User asked: "${userPrompt}". AI responded.`);
+  let lastError: any = null;
+  for (const { model: modelToUse, name: modelName } of modelsToTry) {
+    if (!modelToUse) continue;
+    try {
+      logger.info(`Sending chatbot prompt to ${modelName}...`);
+      const result = await modelToUse.generateContent(fullPrompt);
+      const text = result.response.text();
 
-    return text.trim();
-  } catch (error: any) {
-    const safeMsg = error.message?.replace(/[\r\n]/g, ' ');
-    logger.error('Gemini API error:', safeMsg);
-    throw new Error(`AI service error: ${error.message}`);
+      // Update cache with latest summary for lightweight fallback
+      await setCached(sessionId, `Conversation active. Last exchange: User said "${userPrompt}". ${history.length} prior turns.`);
+      return text.trim();
+    } catch (error: any) {
+      lastError = error;
+      logger.warn(`Chatbot model ${modelName} failed: ${error.message}. Trying next...`);
+    }
   }
+
+  const safeMsg = lastError?.message?.replace(/[\r\n]/g, ' ') || 'Unknown error';
+  logger.error('All chatbot models failed:', safeMsg);
+  throw new Error(`AI service error: ${safeMsg}`);
 };
 
 export const clearContextCache = async (sessionId: string) => {
@@ -136,7 +155,8 @@ export const generateAssessmentProject = async (
   title: string,
   track: string,
   seniority: string,
-  jdText: string
+  jdText: string,
+  round: number = 1
 ): Promise<{ [filename: string]: string }> => {
   // Phase 1: Local RAG - search curated workspaces
   try {
@@ -154,13 +174,18 @@ export const generateAssessmentProject = async (
   }
 
   // Phase 2: Fallback to Gemini generation
-  if (modelFlash && modelPro) {
-    const isSenior = seniority === 'senior';
-    const modelToUse = isSenior ? modelPro : modelFlash;
-    const difficulty = isSenior ? 'Senior (Round 2)' : 'Junior/Mid (Round 1)';
+  if (modelPrimary) {
+    const isRound2 = round === 2;
+    const modelToUse = modelPrimary;
+    const roundLabel = isRound2 ? 'Round 2 (Advanced)' : 'Round 1 (Standard)';
+    const difficultyDesc = isRound2
+      ? 'This is an ADVANCED Round 2 assessment. Generate a significantly harder project with complex architectural challenges, edge cases, performance constraints, and advanced test scenarios. The candidate has already passed Round 1.'
+      : 'This is a STANDARD Round 1 assessment. Generate a moderate-difficulty project suitable for initial evaluation of technical fundamentals.';
 
-    const prompt = `You are a Technical Interview coding project generator for a ${difficulty}-level coding round.
-Generate a coding project matching the following position details:
+    const prompt = `You are a Technical Interview coding project generator for a ${roundLabel} coding round.
+${difficultyDesc}
+
+Job Details:
 Position Title: ${title}
 Track: ${track}
 Seniority: ${seniority}
@@ -171,7 +196,7 @@ Requirements:
    - README.md: clear problem statement, constraints, and test scenarios.
    - index.js: boilerplate starter code.
    - utils.js: boilerplate utility helper code.
-   - test.js: simple unit test assertions that the candidate can run.
+   - test.js: unit test assertions that the candidate can run.
 2. Return ONLY a valid JSON object mapping file paths to their contents. Do not wrap in markdown code blocks.
 Example JSON response:
 {
@@ -263,37 +288,19 @@ Example output:
 
   const fullPrompt = `${systemInstruction}\n\n[User Prompt]: ${prompt}\n\n[Response]: Generate the job details JSON now.`;
 
-  // Try Ollama first
-  try {
-    const { ollamaClient } = await import('./ollamaService');
-    if (ollamaClient.isAvailable()) {
-      const result = await ollamaClient.generate(fullPrompt, undefined, { temperature: 0.3, maxTokens: 1024 });
-      let cleaned = result.trim();
-      if (cleaned.startsWith('```json')) {
-        cleaned = cleaned.replace(/^```json/, '').replace(/```$/, '').trim();
-      } else if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replace(/^```/, '').replace(/```$/, '').trim();
-      }
-      const parsed = JSON.parse(cleaned) as JobDetails;
-      logger.info(`✅ Ollama job generation SUCCESS`);
-      return parsed;
-    }
-  } catch (ollamaError) {
-    logger.warn('Ollama job generation failed, trying Gemini:', (ollamaError as Error).message);
-  }
 
-  // Fallback to Gemini
-  if (!modelFlash || !modelPro) {
-    throw new Error('AI service unavailable: no Ollama or Gemini configured');
+  if (!genAI) {
+    throw new Error('AI service unavailable: Gemini API key is missing or not configured');
   }
 
   const modelsToTry = [
-    { model: modelFlash, name: 'gemini-2.5-flash-lite' },
-    { model: modelPro, name: 'gemini-2.5-pro' }
+    { model: modelPrimary, name: 'gemini-2.5-flash' },
+    { model: modelSecondary, name: 'gemini-2.5-flash-lite' }
   ];
   let lastError: any = null;
 
   for (const { model, name } of modelsToTry) {
+    if (!model) continue;
     try {
       logger.info(`\n Attempting AI job generation with ${name}...`);
       const result = await model.generateContent(fullPrompt);
@@ -356,29 +363,8 @@ Example JSON:
 }
 `;
 
-  // Try Ollama first
-  try {
-    const { ollamaClient } = await import('./ollamaService');
-    if (ollamaClient.isAvailable()) {
-      const result = await ollamaClient.generate(prompt, undefined, { temperature: 0.5, maxTokens: 512 });
-      let cleaned = result.trim();
-      if (cleaned.startsWith('```json')) {
-        cleaned = cleaned.replace(/^```json/, '').replace(/```$/, '').trim();
-      } else if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replace(/^```/, '').replace(/```$/, '').trim();
-      }
-      const parsed = JSON.parse(cleaned);
-      return {
-        title: parsed.title || `Round 1 Assessment Scheduled: ${jobTitle}`,
-        message: parsed.message || `Hi ${candidateName}, your assessment is scheduled.`
-      };
-    }
-  } catch (ollamaError) {
-    logger.warn('Ollama notification generation failed:', (ollamaError as Error).message);
-  }
 
-  // Fallback to Gemini
-  if (!modelFlash) {
+  if (!modelPrimary) {
     // Static fallback
     return {
       title: `Round 1 Assessment Scheduled: ${jobTitle}`,
@@ -387,7 +373,7 @@ Example JSON:
   }
 
   try {
-    const result = await modelFlash.generateContent(prompt);
+    const result = await modelPrimary.generateContent(prompt);
     const text = result.response.text();
     let cleaned = text.trim();
     if (cleaned.startsWith('```json')) {

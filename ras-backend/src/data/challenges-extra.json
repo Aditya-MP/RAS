@@ -1,0 +1,1399 @@
+[
+  {
+    "id": "fr-junior-1",
+    "title": "Reactive UI Stream with Backpressure Flow Part 1",
+    "track": "frontend",
+    "seniority": "junior",
+    "tags": [
+      "react",
+      "streams",
+      "backpressure",
+      "concurrency"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build a custom React state hook that orchestrates high-frequency message streams under memory thresholds, dropping frames or batching state updates dynamically based on browser render cycles. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-junior-2",
+    "title": "Transactional Outbox Engine with WAL Ingestion Part 1",
+    "track": "backend",
+    "seniority": "junior",
+    "tags": [
+      "outbox-pattern",
+      "wal",
+      "event-driven",
+      "postgres"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build a low-latency database poller that scans transactional outbox records and emits events to a broker. Must guarantee exactly-once delivery under crashes. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-junior-3",
+    "title": "GraphQL Gateway with Depth and Rate Limiting Part 1",
+    "track": "fullstack",
+    "seniority": "junior",
+    "tags": [
+      "graphql",
+      "gateway",
+      "security",
+      "rate-limiting"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Create a GraphQL proxy that checks query depth, counts complexity scores, and blocks nested cycles to prevent Denial of Service (DoS) attacks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-junior-4",
+    "title": "Proctored CI/CD Telemetry Pipeline Part 1",
+    "track": "devops",
+    "seniority": "junior",
+    "tags": [
+      "cicd",
+      "telemetry",
+      "docker",
+      "security"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate a pipeline that spins up isolated VM containers, runs verification tests, and publishes proctoring telemetry (network activity, files altered). (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-junior-5",
+    "title": "CRDT-Based Offline-First Mobile Sync Part 1",
+    "track": "mobile",
+    "seniority": "junior",
+    "tags": [
+      "mobile",
+      "offline-first",
+      "crdt",
+      "sync"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build an offline notes database that captures local edits and performs structural synchronization once internet connectivity returns. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-mid-6",
+    "title": "Canvas-Based High-Frequency Chart Ingestor Part 1",
+    "track": "frontend",
+    "seniority": "mid",
+    "tags": [
+      "canvas",
+      "webgl",
+      "performance",
+      "realtime"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a Canvas chart component that renders 50,000 ticks per second, implementing raw pixel caching and custom WebGL contexts to bypass DOM overhead. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-mid-7",
+    "title": "Distributed Consensus Raft Simulator Part 1",
+    "track": "backend",
+    "seniority": "mid",
+    "tags": [
+      "raft",
+      "consensus",
+      "distributed-systems",
+      "algorithms"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Implement a simplified Raft consensus engine with leader election, heartbeats, and log replication. Simulate network partitions and clock drifts. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-mid-8",
+    "title": "Chunked File Upload Gateway with Integrity Checks Part 1",
+    "track": "fullstack",
+    "seniority": "mid",
+    "tags": [
+      "file-upload",
+      "checksum",
+      "integrity",
+      "gateway"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a file gateway that ingests large binaries in parallel chunks, checks SHA-256 hashes on the fly, and merges them securely. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-mid-9",
+    "title": "Kubernetes Custom Operator for Active Monitoring Part 1",
+    "track": "devops",
+    "seniority": "mid",
+    "tags": [
+      "k8s",
+      "operator",
+      "monitoring",
+      "metrics"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Implement a custom operator that monitors pod memory limits, handles auto-scaling under high thread counts, and restricts unauthorized VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-mid-10",
+    "title": "Low-Latency Telemetry Sensor Buffer Part 1",
+    "track": "mobile",
+    "seniority": "mid",
+    "tags": [
+      "mobile",
+      "sensors",
+      "telemetry",
+      "sqlite"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Create a low-latency mobile module that buffers device accelerometer data in SQLite, compressing payloads before uploading. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-senior-11",
+    "title": "Optimistic State Cache with Rollback Log Part 1",
+    "track": "frontend",
+    "seniority": "senior",
+    "tags": [
+      "offline-sync",
+      "redux",
+      "state",
+      "rollback"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a state machine that handles optimistic UI updates, tracking a historic transaction log to roll back changes smoothly if background operations fail. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-senior-12",
+    "title": "Memory-Mapped Key-Value Store with Write-Ahead Log Part 1",
+    "track": "backend",
+    "seniority": "senior",
+    "tags": [
+      "mmap",
+      "key-value",
+      "wal",
+      "storage"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Create a persistent key-value store that reads directly from memory-mapped files and records mutations to a binary write-ahead log for recovery. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-senior-13",
+    "title": "Operational Transformation Chat Editor Part 1",
+    "track": "fullstack",
+    "seniority": "senior",
+    "tags": [
+      "ot",
+      "websocket",
+      "chat",
+      "realtime"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a collaborative text editor utilizing Operational Transformation (OT) over WebSockets, resolving insertion conflicts gracefully. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-senior-14",
+    "title": "Dynamic Reverse Proxy with SSL Termination Part 1",
+    "track": "devops",
+    "seniority": "senior",
+    "tags": [
+      "proxy",
+      "nginx",
+      "ssl",
+      "load-balancer"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a lightweight reverse proxy in Node that dynamically routes traffic based on server loads, handles SSL handshake, and blocks VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-senior-15",
+    "title": "Native Thread Bridge batching engine Part 1",
+    "track": "mobile",
+    "seniority": "senior",
+    "tags": [
+      "mobile",
+      "bridge",
+      "threading",
+      "performance"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Create a low-overhead React Native bridge module that batches rendering requests, bypassing bridge bottlenecks under high frame rates. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-junior-16",
+    "title": "Virtualized List with Dynamic Height Caching Part 2",
+    "track": "frontend",
+    "seniority": "junior",
+    "tags": [
+      "virtualization",
+      "performance",
+      "intersection-observer"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Create an infinity scroll component that handles 100,000 dynamic-height elements with sub-millisecond recalculation and asynchronous image lazy loading. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-junior-17",
+    "title": "Event-Driven CQRS Pipeline with Backpressure Part 2",
+    "track": "backend",
+    "seniority": "junior",
+    "tags": [
+      "cqrs",
+      "event-sourcing",
+      "backpressure",
+      "nodejs"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate an event pipeline that ingests write operations, publishes to a lock-free queue, and asynchronously updates read-optimized stores. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-junior-18",
+    "title": "Server-Sent Events Pipeline with Connection Recoverer Part 2",
+    "track": "fullstack",
+    "seniority": "junior",
+    "tags": [
+      "sse",
+      "connection",
+      "realtime",
+      "recovery"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate a high-throughput Server-Sent Events (SSE) server with custom backoff, packet queuing during offline states, and authentication checks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-junior-19",
+    "title": "Proctored CI/CD Telemetry Pipeline Part 2",
+    "track": "devops",
+    "seniority": "junior",
+    "tags": [
+      "cicd",
+      "telemetry",
+      "docker",
+      "security"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate a pipeline that spins up isolated VM containers, runs verification tests, and publishes proctoring telemetry (network activity, files altered). (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-junior-20",
+    "title": "CRDT-Based Offline-First Mobile Sync Part 2",
+    "track": "mobile",
+    "seniority": "junior",
+    "tags": [
+      "mobile",
+      "offline-first",
+      "crdt",
+      "sync"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build an offline notes database that captures local edits and performs structural synchronization once internet connectivity returns. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-mid-21",
+    "title": "Micro-Frontend Sandboxed Orchestrator Part 2",
+    "track": "frontend",
+    "seniority": "mid",
+    "tags": [
+      "micro-frontends",
+      "sandboxing",
+      "security",
+      "shadow-dom"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a dynamic micro-frontend loader that runs remote scripts inside custom Shadow DOM environments, blocking untrusted global variables and monitoring memory leaks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-mid-22",
+    "title": "Distributed Lock Manager with TTL Expirations Part 2",
+    "track": "backend",
+    "seniority": "mid",
+    "tags": [
+      "locking",
+      "redis",
+      "ttl",
+      "mutex"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a distributed mutex library supporting re-entrancy, auto-renewing leases, dead-lock prevention, and multi-node consensus checks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-mid-23",
+    "title": "GraphQL Gateway with Depth and Rate Limiting Part 2",
+    "track": "fullstack",
+    "seniority": "mid",
+    "tags": [
+      "graphql",
+      "gateway",
+      "security",
+      "rate-limiting"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Create a GraphQL proxy that checks query depth, counts complexity scores, and blocks nested cycles to prevent Denial of Service (DoS) attacks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-mid-24",
+    "title": "Kubernetes Custom Operator for Active Monitoring Part 2",
+    "track": "devops",
+    "seniority": "mid",
+    "tags": [
+      "k8s",
+      "operator",
+      "monitoring",
+      "metrics"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Implement a custom operator that monitors pod memory limits, handles auto-scaling under high thread counts, and restricts unauthorized VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-mid-25",
+    "title": "Low-Latency Telemetry Sensor Buffer Part 2",
+    "track": "mobile",
+    "seniority": "mid",
+    "tags": [
+      "mobile",
+      "sensors",
+      "telemetry",
+      "sqlite"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Create a low-latency mobile module that buffers device accelerometer data in SQLite, compressing payloads before uploading. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-senior-26",
+    "title": "Lock-Free Collaborative CRDT Document Editor Part 2",
+    "track": "frontend",
+    "seniority": "senior",
+    "tags": [
+      "crdt",
+      "collaboration",
+      "lock-free",
+      "yjs"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Implement a lightweight Conflict-Free Replicated Data Type (CRDT) engine in React that resolves out-of-order document edits instantly without centralized lock coordinators. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-senior-27",
+    "title": "Token Bucket Rate Limiter with Sliding Log Part 2",
+    "track": "backend",
+    "seniority": "senior",
+    "tags": [
+      "rate-limiting",
+      "token-bucket",
+      "redis",
+      "concurrency"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Implement a thread-safe sliding window rate limiter that handles burst traffic, microsecond lease expirations, and distributed lock contention. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-senior-28",
+    "title": "Chunked File Upload Gateway with Integrity Checks Part 2",
+    "track": "fullstack",
+    "seniority": "senior",
+    "tags": [
+      "file-upload",
+      "checksum",
+      "integrity",
+      "gateway"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a file gateway that ingests large binaries in parallel chunks, checks SHA-256 hashes on the fly, and merges them securely. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-senior-29",
+    "title": "Dynamic Reverse Proxy with SSL Termination Part 2",
+    "track": "devops",
+    "seniority": "senior",
+    "tags": [
+      "proxy",
+      "nginx",
+      "ssl",
+      "load-balancer"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a lightweight reverse proxy in Node that dynamically routes traffic based on server loads, handles SSL handshake, and blocks VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-senior-30",
+    "title": "Native Thread Bridge batching engine Part 2",
+    "track": "mobile",
+    "seniority": "senior",
+    "tags": [
+      "mobile",
+      "bridge",
+      "threading",
+      "performance"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Create a low-overhead React Native bridge module that batches rendering requests, bypassing bridge bottlenecks under high frame rates. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-junior-31",
+    "title": "Reactive UI Stream with Backpressure Flow Part 3",
+    "track": "frontend",
+    "seniority": "junior",
+    "tags": [
+      "react",
+      "streams",
+      "backpressure",
+      "concurrency"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build a custom React state hook that orchestrates high-frequency message streams under memory thresholds, dropping frames or batching state updates dynamically based on browser render cycles. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-junior-32",
+    "title": "Transactional Outbox Engine with WAL Ingestion Part 3",
+    "track": "backend",
+    "seniority": "junior",
+    "tags": [
+      "outbox-pattern",
+      "wal",
+      "event-driven",
+      "postgres"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build a low-latency database poller that scans transactional outbox records and emits events to a broker. Must guarantee exactly-once delivery under crashes. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-junior-33",
+    "title": "Operational Transformation Chat Editor Part 3",
+    "track": "fullstack",
+    "seniority": "junior",
+    "tags": [
+      "ot",
+      "websocket",
+      "chat",
+      "realtime"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build a collaborative text editor utilizing Operational Transformation (OT) over WebSockets, resolving insertion conflicts gracefully. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-junior-34",
+    "title": "Proctored CI/CD Telemetry Pipeline Part 3",
+    "track": "devops",
+    "seniority": "junior",
+    "tags": [
+      "cicd",
+      "telemetry",
+      "docker",
+      "security"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate a pipeline that spins up isolated VM containers, runs verification tests, and publishes proctoring telemetry (network activity, files altered). (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-junior-35",
+    "title": "CRDT-Based Offline-First Mobile Sync Part 3",
+    "track": "mobile",
+    "seniority": "junior",
+    "tags": [
+      "mobile",
+      "offline-first",
+      "crdt",
+      "sync"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build an offline notes database that captures local edits and performs structural synchronization once internet connectivity returns. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-mid-36",
+    "title": "Canvas-Based High-Frequency Chart Ingestor Part 3",
+    "track": "frontend",
+    "seniority": "mid",
+    "tags": [
+      "canvas",
+      "webgl",
+      "performance",
+      "realtime"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a Canvas chart component that renders 50,000 ticks per second, implementing raw pixel caching and custom WebGL contexts to bypass DOM overhead. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-mid-37",
+    "title": "Distributed Consensus Raft Simulator Part 3",
+    "track": "backend",
+    "seniority": "mid",
+    "tags": [
+      "raft",
+      "consensus",
+      "distributed-systems",
+      "algorithms"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Implement a simplified Raft consensus engine with leader election, heartbeats, and log replication. Simulate network partitions and clock drifts. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-mid-38",
+    "title": "Server-Sent Events Pipeline with Connection Recoverer Part 3",
+    "track": "fullstack",
+    "seniority": "mid",
+    "tags": [
+      "sse",
+      "connection",
+      "realtime",
+      "recovery"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Orchestrate a high-throughput Server-Sent Events (SSE) server with custom backoff, packet queuing during offline states, and authentication checks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-mid-39",
+    "title": "Kubernetes Custom Operator for Active Monitoring Part 3",
+    "track": "devops",
+    "seniority": "mid",
+    "tags": [
+      "k8s",
+      "operator",
+      "monitoring",
+      "metrics"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Implement a custom operator that monitors pod memory limits, handles auto-scaling under high thread counts, and restricts unauthorized VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-mid-40",
+    "title": "Low-Latency Telemetry Sensor Buffer Part 3",
+    "track": "mobile",
+    "seniority": "mid",
+    "tags": [
+      "mobile",
+      "sensors",
+      "telemetry",
+      "sqlite"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Create a low-latency mobile module that buffers device accelerometer data in SQLite, compressing payloads before uploading. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-senior-41",
+    "title": "Optimistic State Cache with Rollback Log Part 3",
+    "track": "frontend",
+    "seniority": "senior",
+    "tags": [
+      "offline-sync",
+      "redux",
+      "state",
+      "rollback"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a state machine that handles optimistic UI updates, tracking a historic transaction log to roll back changes smoothly if background operations fail. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-senior-42",
+    "title": "Memory-Mapped Key-Value Store with Write-Ahead Log Part 3",
+    "track": "backend",
+    "seniority": "senior",
+    "tags": [
+      "mmap",
+      "key-value",
+      "wal",
+      "storage"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Create a persistent key-value store that reads directly from memory-mapped files and records mutations to a binary write-ahead log for recovery. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-senior-43",
+    "title": "GraphQL Gateway with Depth and Rate Limiting Part 3",
+    "track": "fullstack",
+    "seniority": "senior",
+    "tags": [
+      "graphql",
+      "gateway",
+      "security",
+      "rate-limiting"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Create a GraphQL proxy that checks query depth, counts complexity scores, and blocks nested cycles to prevent Denial of Service (DoS) attacks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-senior-44",
+    "title": "Dynamic Reverse Proxy with SSL Termination Part 3",
+    "track": "devops",
+    "seniority": "senior",
+    "tags": [
+      "proxy",
+      "nginx",
+      "ssl",
+      "load-balancer"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a lightweight reverse proxy in Node that dynamically routes traffic based on server loads, handles SSL handshake, and blocks VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-senior-45",
+    "title": "Native Thread Bridge batching engine Part 3",
+    "track": "mobile",
+    "seniority": "senior",
+    "tags": [
+      "mobile",
+      "bridge",
+      "threading",
+      "performance"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Create a low-overhead React Native bridge module that batches rendering requests, bypassing bridge bottlenecks under high frame rates. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-junior-46",
+    "title": "Virtualized List with Dynamic Height Caching Part 4",
+    "track": "frontend",
+    "seniority": "junior",
+    "tags": [
+      "virtualization",
+      "performance",
+      "intersection-observer"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Create an infinity scroll component that handles 100,000 dynamic-height elements with sub-millisecond recalculation and asynchronous image lazy loading. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-junior-47",
+    "title": "Event-Driven CQRS Pipeline with Backpressure Part 4",
+    "track": "backend",
+    "seniority": "junior",
+    "tags": [
+      "cqrs",
+      "event-sourcing",
+      "backpressure",
+      "nodejs"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate an event pipeline that ingests write operations, publishes to a lock-free queue, and asynchronously updates read-optimized stores. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-junior-48",
+    "title": "Chunked File Upload Gateway with Integrity Checks Part 4",
+    "track": "fullstack",
+    "seniority": "junior",
+    "tags": [
+      "file-upload",
+      "checksum",
+      "integrity",
+      "gateway"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build a file gateway that ingests large binaries in parallel chunks, checks SHA-256 hashes on the fly, and merges them securely. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-junior-49",
+    "title": "Proctored CI/CD Telemetry Pipeline Part 4",
+    "track": "devops",
+    "seniority": "junior",
+    "tags": [
+      "cicd",
+      "telemetry",
+      "docker",
+      "security"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate a pipeline that spins up isolated VM containers, runs verification tests, and publishes proctoring telemetry (network activity, files altered). (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-junior-50",
+    "title": "CRDT-Based Offline-First Mobile Sync Part 4",
+    "track": "mobile",
+    "seniority": "junior",
+    "tags": [
+      "mobile",
+      "offline-first",
+      "crdt",
+      "sync"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build an offline notes database that captures local edits and performs structural synchronization once internet connectivity returns. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-mid-51",
+    "title": "Micro-Frontend Sandboxed Orchestrator Part 4",
+    "track": "frontend",
+    "seniority": "mid",
+    "tags": [
+      "micro-frontends",
+      "sandboxing",
+      "security",
+      "shadow-dom"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a dynamic micro-frontend loader that runs remote scripts inside custom Shadow DOM environments, blocking untrusted global variables and monitoring memory leaks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-mid-52",
+    "title": "Distributed Lock Manager with TTL Expirations Part 4",
+    "track": "backend",
+    "seniority": "mid",
+    "tags": [
+      "locking",
+      "redis",
+      "ttl",
+      "mutex"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a distributed mutex library supporting re-entrancy, auto-renewing leases, dead-lock prevention, and multi-node consensus checks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-mid-53",
+    "title": "Operational Transformation Chat Editor Part 4",
+    "track": "fullstack",
+    "seniority": "mid",
+    "tags": [
+      "ot",
+      "websocket",
+      "chat",
+      "realtime"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a collaborative text editor utilizing Operational Transformation (OT) over WebSockets, resolving insertion conflicts gracefully. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-mid-54",
+    "title": "Kubernetes Custom Operator for Active Monitoring Part 4",
+    "track": "devops",
+    "seniority": "mid",
+    "tags": [
+      "k8s",
+      "operator",
+      "monitoring",
+      "metrics"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Implement a custom operator that monitors pod memory limits, handles auto-scaling under high thread counts, and restricts unauthorized VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-mid-55",
+    "title": "Low-Latency Telemetry Sensor Buffer Part 4",
+    "track": "mobile",
+    "seniority": "mid",
+    "tags": [
+      "mobile",
+      "sensors",
+      "telemetry",
+      "sqlite"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Create a low-latency mobile module that buffers device accelerometer data in SQLite, compressing payloads before uploading. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-senior-56",
+    "title": "Lock-Free Collaborative CRDT Document Editor Part 4",
+    "track": "frontend",
+    "seniority": "senior",
+    "tags": [
+      "crdt",
+      "collaboration",
+      "lock-free",
+      "yjs"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Implement a lightweight Conflict-Free Replicated Data Type (CRDT) engine in React that resolves out-of-order document edits instantly without centralized lock coordinators. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-senior-57",
+    "title": "Token Bucket Rate Limiter with Sliding Log Part 4",
+    "track": "backend",
+    "seniority": "senior",
+    "tags": [
+      "rate-limiting",
+      "token-bucket",
+      "redis",
+      "concurrency"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Implement a thread-safe sliding window rate limiter that handles burst traffic, microsecond lease expirations, and distributed lock contention. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-senior-58",
+    "title": "Server-Sent Events Pipeline with Connection Recoverer Part 4",
+    "track": "fullstack",
+    "seniority": "senior",
+    "tags": [
+      "sse",
+      "connection",
+      "realtime",
+      "recovery"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Orchestrate a high-throughput Server-Sent Events (SSE) server with custom backoff, packet queuing during offline states, and authentication checks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-senior-59",
+    "title": "Dynamic Reverse Proxy with SSL Termination Part 4",
+    "track": "devops",
+    "seniority": "senior",
+    "tags": [
+      "proxy",
+      "nginx",
+      "ssl",
+      "load-balancer"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a lightweight reverse proxy in Node that dynamically routes traffic based on server loads, handles SSL handshake, and blocks VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-senior-60",
+    "title": "Native Thread Bridge batching engine Part 4",
+    "track": "mobile",
+    "seniority": "senior",
+    "tags": [
+      "mobile",
+      "bridge",
+      "threading",
+      "performance"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Create a low-overhead React Native bridge module that batches rendering requests, bypassing bridge bottlenecks under high frame rates. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-junior-61",
+    "title": "Reactive UI Stream with Backpressure Flow Part 5",
+    "track": "frontend",
+    "seniority": "junior",
+    "tags": [
+      "react",
+      "streams",
+      "backpressure",
+      "concurrency"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build a custom React state hook that orchestrates high-frequency message streams under memory thresholds, dropping frames or batching state updates dynamically based on browser render cycles. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-junior-62",
+    "title": "Transactional Outbox Engine with WAL Ingestion Part 5",
+    "track": "backend",
+    "seniority": "junior",
+    "tags": [
+      "outbox-pattern",
+      "wal",
+      "event-driven",
+      "postgres"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build a low-latency database poller that scans transactional outbox records and emits events to a broker. Must guarantee exactly-once delivery under crashes. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-junior-63",
+    "title": "GraphQL Gateway with Depth and Rate Limiting Part 5",
+    "track": "fullstack",
+    "seniority": "junior",
+    "tags": [
+      "graphql",
+      "gateway",
+      "security",
+      "rate-limiting"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Create a GraphQL proxy that checks query depth, counts complexity scores, and blocks nested cycles to prevent Denial of Service (DoS) attacks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-junior-64",
+    "title": "Proctored CI/CD Telemetry Pipeline Part 5",
+    "track": "devops",
+    "seniority": "junior",
+    "tags": [
+      "cicd",
+      "telemetry",
+      "docker",
+      "security"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate a pipeline that spins up isolated VM containers, runs verification tests, and publishes proctoring telemetry (network activity, files altered). (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-junior-65",
+    "title": "CRDT-Based Offline-First Mobile Sync Part 5",
+    "track": "mobile",
+    "seniority": "junior",
+    "tags": [
+      "mobile",
+      "offline-first",
+      "crdt",
+      "sync"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build an offline notes database that captures local edits and performs structural synchronization once internet connectivity returns. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-mid-66",
+    "title": "Canvas-Based High-Frequency Chart Ingestor Part 5",
+    "track": "frontend",
+    "seniority": "mid",
+    "tags": [
+      "canvas",
+      "webgl",
+      "performance",
+      "realtime"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a Canvas chart component that renders 50,000 ticks per second, implementing raw pixel caching and custom WebGL contexts to bypass DOM overhead. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-mid-67",
+    "title": "Distributed Consensus Raft Simulator Part 5",
+    "track": "backend",
+    "seniority": "mid",
+    "tags": [
+      "raft",
+      "consensus",
+      "distributed-systems",
+      "algorithms"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Implement a simplified Raft consensus engine with leader election, heartbeats, and log replication. Simulate network partitions and clock drifts. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-mid-68",
+    "title": "Chunked File Upload Gateway with Integrity Checks Part 5",
+    "track": "fullstack",
+    "seniority": "mid",
+    "tags": [
+      "file-upload",
+      "checksum",
+      "integrity",
+      "gateway"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a file gateway that ingests large binaries in parallel chunks, checks SHA-256 hashes on the fly, and merges them securely. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-mid-69",
+    "title": "Kubernetes Custom Operator for Active Monitoring Part 5",
+    "track": "devops",
+    "seniority": "mid",
+    "tags": [
+      "k8s",
+      "operator",
+      "monitoring",
+      "metrics"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Implement a custom operator that monitors pod memory limits, handles auto-scaling under high thread counts, and restricts unauthorized VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-mid-70",
+    "title": "Low-Latency Telemetry Sensor Buffer Part 5",
+    "track": "mobile",
+    "seniority": "mid",
+    "tags": [
+      "mobile",
+      "sensors",
+      "telemetry",
+      "sqlite"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Create a low-latency mobile module that buffers device accelerometer data in SQLite, compressing payloads before uploading. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-senior-71",
+    "title": "Optimistic State Cache with Rollback Log Part 5",
+    "track": "frontend",
+    "seniority": "senior",
+    "tags": [
+      "offline-sync",
+      "redux",
+      "state",
+      "rollback"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a state machine that handles optimistic UI updates, tracking a historic transaction log to roll back changes smoothly if background operations fail. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-senior-72",
+    "title": "Memory-Mapped Key-Value Store with Write-Ahead Log Part 5",
+    "track": "backend",
+    "seniority": "senior",
+    "tags": [
+      "mmap",
+      "key-value",
+      "wal",
+      "storage"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Create a persistent key-value store that reads directly from memory-mapped files and records mutations to a binary write-ahead log for recovery. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-senior-73",
+    "title": "Operational Transformation Chat Editor Part 5",
+    "track": "fullstack",
+    "seniority": "senior",
+    "tags": [
+      "ot",
+      "websocket",
+      "chat",
+      "realtime"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a collaborative text editor utilizing Operational Transformation (OT) over WebSockets, resolving insertion conflicts gracefully. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-senior-74",
+    "title": "Dynamic Reverse Proxy with SSL Termination Part 5",
+    "track": "devops",
+    "seniority": "senior",
+    "tags": [
+      "proxy",
+      "nginx",
+      "ssl",
+      "load-balancer"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a lightweight reverse proxy in Node that dynamically routes traffic based on server loads, handles SSL handshake, and blocks VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-senior-75",
+    "title": "Native Thread Bridge batching engine Part 5",
+    "track": "mobile",
+    "seniority": "senior",
+    "tags": [
+      "mobile",
+      "bridge",
+      "threading",
+      "performance"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Create a low-overhead React Native bridge module that batches rendering requests, bypassing bridge bottlenecks under high frame rates. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-junior-76",
+    "title": "Virtualized List with Dynamic Height Caching Part 6",
+    "track": "frontend",
+    "seniority": "junior",
+    "tags": [
+      "virtualization",
+      "performance",
+      "intersection-observer"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Create an infinity scroll component that handles 100,000 dynamic-height elements with sub-millisecond recalculation and asynchronous image lazy loading. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-junior-77",
+    "title": "Event-Driven CQRS Pipeline with Backpressure Part 6",
+    "track": "backend",
+    "seniority": "junior",
+    "tags": [
+      "cqrs",
+      "event-sourcing",
+      "backpressure",
+      "nodejs"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate an event pipeline that ingests write operations, publishes to a lock-free queue, and asynchronously updates read-optimized stores. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-junior-78",
+    "title": "Server-Sent Events Pipeline with Connection Recoverer Part 6",
+    "track": "fullstack",
+    "seniority": "junior",
+    "tags": [
+      "sse",
+      "connection",
+      "realtime",
+      "recovery"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate a high-throughput Server-Sent Events (SSE) server with custom backoff, packet queuing during offline states, and authentication checks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-junior-79",
+    "title": "Proctored CI/CD Telemetry Pipeline Part 6",
+    "track": "devops",
+    "seniority": "junior",
+    "tags": [
+      "cicd",
+      "telemetry",
+      "docker",
+      "security"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate a pipeline that spins up isolated VM containers, runs verification tests, and publishes proctoring telemetry (network activity, files altered). (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-junior-80",
+    "title": "CRDT-Based Offline-First Mobile Sync Part 6",
+    "track": "mobile",
+    "seniority": "junior",
+    "tags": [
+      "mobile",
+      "offline-first",
+      "crdt",
+      "sync"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build an offline notes database that captures local edits and performs structural synchronization once internet connectivity returns. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-mid-81",
+    "title": "Micro-Frontend Sandboxed Orchestrator Part 6",
+    "track": "frontend",
+    "seniority": "mid",
+    "tags": [
+      "micro-frontends",
+      "sandboxing",
+      "security",
+      "shadow-dom"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a dynamic micro-frontend loader that runs remote scripts inside custom Shadow DOM environments, blocking untrusted global variables and monitoring memory leaks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-mid-82",
+    "title": "Distributed Lock Manager with TTL Expirations Part 6",
+    "track": "backend",
+    "seniority": "mid",
+    "tags": [
+      "locking",
+      "redis",
+      "ttl",
+      "mutex"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a distributed mutex library supporting re-entrancy, auto-renewing leases, dead-lock prevention, and multi-node consensus checks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-mid-83",
+    "title": "GraphQL Gateway with Depth and Rate Limiting Part 6",
+    "track": "fullstack",
+    "seniority": "mid",
+    "tags": [
+      "graphql",
+      "gateway",
+      "security",
+      "rate-limiting"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Create a GraphQL proxy that checks query depth, counts complexity scores, and blocks nested cycles to prevent Denial of Service (DoS) attacks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-mid-84",
+    "title": "Kubernetes Custom Operator for Active Monitoring Part 6",
+    "track": "devops",
+    "seniority": "mid",
+    "tags": [
+      "k8s",
+      "operator",
+      "monitoring",
+      "metrics"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Implement a custom operator that monitors pod memory limits, handles auto-scaling under high thread counts, and restricts unauthorized VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-mid-85",
+    "title": "Low-Latency Telemetry Sensor Buffer Part 6",
+    "track": "mobile",
+    "seniority": "mid",
+    "tags": [
+      "mobile",
+      "sensors",
+      "telemetry",
+      "sqlite"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Create a low-latency mobile module that buffers device accelerometer data in SQLite, compressing payloads before uploading. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-senior-86",
+    "title": "Lock-Free Collaborative CRDT Document Editor Part 6",
+    "track": "frontend",
+    "seniority": "senior",
+    "tags": [
+      "crdt",
+      "collaboration",
+      "lock-free",
+      "yjs"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Implement a lightweight Conflict-Free Replicated Data Type (CRDT) engine in React that resolves out-of-order document edits instantly without centralized lock coordinators. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-senior-87",
+    "title": "Token Bucket Rate Limiter with Sliding Log Part 6",
+    "track": "backend",
+    "seniority": "senior",
+    "tags": [
+      "rate-limiting",
+      "token-bucket",
+      "redis",
+      "concurrency"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Implement a thread-safe sliding window rate limiter that handles burst traffic, microsecond lease expirations, and distributed lock contention. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-senior-88",
+    "title": "Chunked File Upload Gateway with Integrity Checks Part 6",
+    "track": "fullstack",
+    "seniority": "senior",
+    "tags": [
+      "file-upload",
+      "checksum",
+      "integrity",
+      "gateway"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a file gateway that ingests large binaries in parallel chunks, checks SHA-256 hashes on the fly, and merges them securely. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-senior-89",
+    "title": "Dynamic Reverse Proxy with SSL Termination Part 6",
+    "track": "devops",
+    "seniority": "senior",
+    "tags": [
+      "proxy",
+      "nginx",
+      "ssl",
+      "load-balancer"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Build a lightweight reverse proxy in Node that dynamically routes traffic based on server loads, handles SSL handshake, and blocks VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-senior-90",
+    "title": "Native Thread Bridge batching engine Part 6",
+    "track": "mobile",
+    "seniority": "senior",
+    "tags": [
+      "mobile",
+      "bridge",
+      "threading",
+      "performance"
+    ],
+    "difficulty": 5,
+    "description": "[Next-Gen Challenge] Create a low-overhead React Native bridge module that batches rendering requests, bypassing bridge bottlenecks under high frame rates. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-junior-91",
+    "title": "Reactive UI Stream with Backpressure Flow Part 7",
+    "track": "frontend",
+    "seniority": "junior",
+    "tags": [
+      "react",
+      "streams",
+      "backpressure",
+      "concurrency"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build a custom React state hook that orchestrates high-frequency message streams under memory thresholds, dropping frames or batching state updates dynamically based on browser render cycles. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-junior-92",
+    "title": "Transactional Outbox Engine with WAL Ingestion Part 7",
+    "track": "backend",
+    "seniority": "junior",
+    "tags": [
+      "outbox-pattern",
+      "wal",
+      "event-driven",
+      "postgres"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build a low-latency database poller that scans transactional outbox records and emits events to a broker. Must guarantee exactly-once delivery under crashes. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-junior-93",
+    "title": "Operational Transformation Chat Editor Part 7",
+    "track": "fullstack",
+    "seniority": "junior",
+    "tags": [
+      "ot",
+      "websocket",
+      "chat",
+      "realtime"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build a collaborative text editor utilizing Operational Transformation (OT) over WebSockets, resolving insertion conflicts gracefully. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-junior-94",
+    "title": "Proctored CI/CD Telemetry Pipeline Part 7",
+    "track": "devops",
+    "seniority": "junior",
+    "tags": [
+      "cicd",
+      "telemetry",
+      "docker",
+      "security"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Orchestrate a pipeline that spins up isolated VM containers, runs verification tests, and publishes proctoring telemetry (network activity, files altered). (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-junior-95",
+    "title": "CRDT-Based Offline-First Mobile Sync Part 7",
+    "track": "mobile",
+    "seniority": "junior",
+    "tags": [
+      "mobile",
+      "offline-first",
+      "crdt",
+      "sync"
+    ],
+    "difficulty": 2,
+    "description": "[Next-Gen Challenge] Build an offline notes database that captures local edits and performs structural synchronization once internet connectivity returns. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fr-mid-96",
+    "title": "Canvas-Based High-Frequency Chart Ingestor Part 7",
+    "track": "frontend",
+    "seniority": "mid",
+    "tags": [
+      "canvas",
+      "webgl",
+      "performance",
+      "realtime"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Build a Canvas chart component that renders 50,000 ticks per second, implementing raw pixel caching and custom WebGL contexts to bypass DOM overhead. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "ba-mid-97",
+    "title": "Distributed Consensus Raft Simulator Part 7",
+    "track": "backend",
+    "seniority": "mid",
+    "tags": [
+      "raft",
+      "consensus",
+      "distributed-systems",
+      "algorithms"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Implement a simplified Raft consensus engine with leader election, heartbeats, and log replication. Simulate network partitions and clock drifts. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "fu-mid-98",
+    "title": "Server-Sent Events Pipeline with Connection Recoverer Part 7",
+    "track": "fullstack",
+    "seniority": "mid",
+    "tags": [
+      "sse",
+      "connection",
+      "realtime",
+      "recovery"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Orchestrate a high-throughput Server-Sent Events (SSE) server with custom backoff, packet queuing during offline states, and authentication checks. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "de-mid-99",
+    "title": "Kubernetes Custom Operator for Active Monitoring Part 7",
+    "track": "devops",
+    "seniority": "mid",
+    "tags": [
+      "k8s",
+      "operator",
+      "monitoring",
+      "metrics"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Implement a custom operator that monitors pod memory limits, handles auto-scaling under high thread counts, and restricts unauthorized VMs. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  },
+  {
+    "id": "mo-mid-100",
+    "title": "Low-Latency Telemetry Sensor Buffer Part 7",
+    "track": "mobile",
+    "seniority": "mid",
+    "tags": [
+      "mobile",
+      "sensors",
+      "telemetry",
+      "sqlite"
+    ],
+    "difficulty": 3,
+    "description": "[Next-Gen Challenge] Create a low-latency mobile module that buffers device accelerometer data in SQLite, compressing payloads before uploading. (Proctored sandbox: anti-AI heuristics detect copy-paste patterns, VM hardware signatures, and invalid keystroke rhythms)."
+  }
+]

@@ -4,6 +4,7 @@ import { getChaosMetrics } from './chaosService';
 import { getCandidateInfluenceScores } from './gitAnalysisService';
 import { createTeam } from './teamService';
 import { analyzeKeystrokeAnomaly, KeystrokeFeatures } from './anomalyDetectionService';
+import { createAssessment } from './assessmentService';
 
 export const getDialogueStats = async (teamId: string, candidateId: string) => {
   const { data, error } = await supabaseAdmin
@@ -59,7 +60,7 @@ export const scoreTeam = async (teamId: string): Promise<ScoringMetrics[]> => {
   // Fetch team details first
   const { data: team, error: teamError } = await supabaseAdmin
     .from('teams')
-    .select('round, assessment_id, assessment:assessments(id, employer_id, title)')
+    .select('round, assessment_id, assessment:assessments(id, employer_id, title, description, jd_text, seniority_level, tech_track, extracted_skills, max_candidates)')
     .eq('id', teamId)
     .single();
 
@@ -99,64 +100,94 @@ export const scoreTeam = async (teamId: string): Promise<ScoringMetrics[]> => {
   const results: ScoringMetrics[] = [];
 
   for (const candidateId of Object.keys(eventsByCandidate)) {
-    const events = eventsByCandidate[candidateId];
+    const events = eventsByCandidate[candidateId];    // Helper to safely extract event_data from either flat or parent-child structures
+    const getEventData = (e: any) => {
+      if (e.event_data && e.event_data.child && e.event_data.child.data) {
+        return e.event_data.child.data;
+      }
+      return e.event_data || {};
+    };
 
     // --- Coding Correctness ---
     const testEvents = events.filter(e =>
       e.event_class === 'EV_TRM' &&
-      (e.event_data.command?.includes('test') ||
-        e.event_data.command?.includes('pytest') ||
-        e.event_data.command?.includes('jest'))
+      (getEventData(e).command?.includes('test') ||
+        getEventData(e).command?.includes('pytest') ||
+        getEventData(e).command?.includes('jest'))
     );
     let testPasses = 0, testFails = 0;
     for (const ev of testEvents) {
-      if (ev.event_data.exit_code === 0) testPasses++;
-      else if (ev.event_data.exit_code !== undefined) testFails++;
+      const data = getEventData(ev);
+      if (data.exit_code === 0) testPasses++;
+      else if (data.exit_code !== undefined) testFails++;
     }
     const totalTests = testPasses + testFails;
     const codingCorrectness = totalTests > 0 ? testPasses / totalTests : 0.5;
 
     // --- AI Collaboration Fluency ---
-    const promptEvents = events.filter(e => e.event_class === 'EV_PRM');
-    const acceptEvents = events.filter(e => e.event_class === 'EV_ACP' && e.event_data.acceptance === true);
-    const manualEdits = events.filter(e => e.event_class === 'EV_KBD');
+    // Count only parent prompts (those that do not have a parent_id field)
+    const promptEvents = events.filter(e => e.event_class === 'EV_PRM' && !e.event_data?.parent_id);
+    const acceptEvents = events.filter(e => {
+      const data = getEventData(e);
+      return e.event_class === 'EV_ACP' && data.acceptance === true;
+    });
+    const manualEdits = events.filter(e => 
+      e.event_class === 'EV_KBD' || e.event_data?.child?.activity_category === 'keystroke'
+    );
     const totalPrompts = promptEvents.length;
     const totalAccepts = acceptEvents.length;
 
     let aiFluency = 0.5;
     if (totalPrompts > 0) {
       const acceptRatio = Math.min(totalAccepts / totalPrompts, 1.0);
-      const firstAcceptTs = acceptEvents[0]?.event_data?.timestamp_ms || 0;
-      const manualAfterAccept = events.filter(e =>
-        e.event_class === 'EV_KBD' && e.event_data.timestamp_ms > firstAcceptTs
-      ).length;
+      const firstAcceptTs = getEventData(acceptEvents[0] || {}).timestamp_ms || 0;
+      const manualAfterAccept = events.filter(e => {
+        const isKbd = e.event_class === 'EV_KBD' || e.event_data?.child?.activity_category === 'keystroke';
+        return isKbd && (getEventData(e).timestamp_ms || 0) > firstAcceptTs;
+      }).length;
       const verificationScore = Math.min(manualAfterAccept / (totalAccepts + 1), 0.3);
       aiFluency = 0.4 + 0.3 * acceptRatio + 0.3 * verificationScore;
     }
 
     // --- Keystroke Integrity (ML-based anomaly detection) ---
-    const kbdEvents = events.filter(e => e.event_class === 'EV_KBD');
-    const pasteEvents = events.filter(e => e.event_class === 'EV_PST');
+    const kbdEvents = events.filter(e => e.event_class === 'EV_KBD' || e.event_data?.child?.activity_category === 'keystroke');
+    const pasteEvents = events.filter(e => e.event_class === 'EV_PST' || e.event_data?.child?.activity_category === 'paste');
+    const blurEvents = events.filter(e => e.event_class === 'EV_BLR' || e.event_data?.child?.activity_category === 'focus_loss');
+
     const dwellTimes: number[] = [];
     const flightTimes: number[] = [];
     for (let i = 0; i < kbdEvents.length; i++) {
       const ev = kbdEvents[i];
-      if (ev.event_data.dwell_time_ms) dwellTimes.push(ev.event_data.dwell_time_ms);
-      if (i > 0 && ev.event_data.timestamp_ms && kbdEvents[i - 1].event_data.timestamp_ms) {
-        flightTimes.push(ev.event_data.timestamp_ms - kbdEvents[i - 1].event_data.timestamp_ms);
+      const data = getEventData(ev);
+      if (data.dwell_time_ms) dwellTimes.push(data.dwell_time_ms);
+      if (i > 0) {
+        const prevData = getEventData(kbdEvents[i - 1]);
+        if (data.timestamp_ms && prevData.timestamp_ms) {
+          flightTimes.push(data.timestamp_ms - prevData.timestamp_ms);
+        }
       }
     }
-    let integrity = 0.5;
-    if (flightTimes.length > 10) {
-      const features: KeystrokeFeatures = {
-        dwellTimes,
-        flightTimes,
-        pasteEvents: pasteEvents.length,
-        totalEvents: kbdEvents.length,
-      };
-      const anomalyResult = analyzeKeystrokeAnomaly(features);
-      integrity = anomalyResult.integrityScore;
-    }
+
+    const focusLossCount = blurEvents.filter(e => getEventData(e).blur_duration_ms).length;
+    const focusLossDuration = blurEvents.reduce((acc, e) => acc + (getEventData(e).blur_duration_ms || 0), 0);
+    const domInjections = blurEvents.filter(e => getEventData(e).untrusted_injection === true).length;
+    const hardwareEvent = blurEvents.find(e => getEventData(e).target_app === 'hardware_signature');
+    const fingerprint = hardwareEvent ? (getEventData(hardwareEvent).hardware_fingerprint || '') : '';
+    const isVm = /virtualbox|vmware|swiftshader|software|basic render/i.test(fingerprint);
+
+    const features: KeystrokeFeatures = {
+      dwellTimes,
+      flightTimes,
+      pasteEvents: pasteEvents.length,
+      totalEvents: kbdEvents.length,
+      focusLossCount,
+      focusLossDuration,
+      domInjections,
+      virtualMachineHash: isVm
+    };
+
+    const anomalyResult = analyzeKeystrokeAnomaly(features);
+    const integrity = anomalyResult.integrityScore;
 
     // --- Dialogue Stats ---
     let softSkillScore = 0.5;
@@ -210,6 +241,13 @@ export const scoreTeam = async (teamId: string): Promise<ScoringMetrics[]> => {
         manual_edits: manualEdits.length,
         avg_dwell_time: avg(dwellTimes),
         avg_flight_time: avg(flightTimes),
+        proctoring: {
+          focus_loss_count: focusLossCount,
+          focus_loss_duration_ms: focusLossDuration,
+          dom_injections_detected: domInjections,
+          is_virtual_machine: isVm,
+          fingerprint: fingerprint
+        },
         dialogue: dialogueStats,
         peer_review: { raw: peerScore.raw, calibrated: peerScore.score, bias_adjustment: peerScore.biasAdjustment },
         chaos: chaosStats,
@@ -243,30 +281,65 @@ export const scoreTeam = async (teamId: string): Promise<ScoringMetrics[]> => {
         newStatus = teamRound === 1 ? 'round2_scheduled' : 'shortlisted_for_hr';
       }
 
-      await supabaseAdmin
-        .from('job_applications')
-        .update({ status: newStatus })
-        .eq('job_id', job.id)
-        .eq('candidate_id', candidateId);
-
       if (newStatus === 'round2_scheduled') {
-        // Form a Round 2 Team chamber
-        const r2Team = await createTeam(assessment.id, [candidateId], job.employer_id || employerId, 2);
+        // First set proper status transitions
+        await supabaseAdmin
+          .from('job_applications')
+          .update({ status: 'round1_completed' })
+          .eq('job_id', job.id)
+          .eq('candidate_id', candidateId);
+
+        // Create a NEW Round 2-specific assessment with harder AI-generated challenges
+        const r2Assessment = await createAssessment(employerId, {
+          title: `${job.title} - Round 2 (Advanced)`,
+          description: `Advanced Round 2 assessment for ${job.title}. The candidate scored ${finalPercentile}% in Round 1.`,
+          jd_text: assessment.jd_text || job.title || '',
+          seniority_level: assessment.seniority_level || 'mid',
+          tech_track: assessment.tech_track || 'fullstack',
+          max_candidates: 5,
+          round: 2
+        });
+
+        // Form a Round 2 Team chamber linked to the new Round 2 assessment
+        const r2Team = await createTeam(r2Assessment.id, [candidateId], job.employer_id || employerId, 2);
+
+        // Update job application to round2_scheduled
+        await supabaseAdmin
+          .from('job_applications')
+          .update({ status: 'round2_scheduled' })
+          .eq('job_id', job.id)
+          .eq('candidate_id', candidateId);
         
         await supabaseAdmin.from('notifications').insert([{
+          sender_id: job?.employer_id || employerId,
           recipient_id: candidateId,
           title: `Promoted to Round 2: ${job.title}`,
           message: `Congratulations! You scored ${finalPercentile}% in Round 1. AI HireHub has scheduled you for Round 2 (Advanced Stack-Specific Sandbox). Join Sandbox with UID: ${r2Team.id}.`,
           type: 'success',
           metadata: {
             uid: r2Team.id,
+            assessment_id: r2Assessment.id,
             job_id: job.id,
             job_title: job.title,
             round: 2
           }
         }]);
       } else if (newStatus === 'shortlisted_for_hr') {
+        // Set status to round2_completed first before shortlisting
+        await supabaseAdmin
+          .from('job_applications')
+          .update({ status: 'round2_completed' })
+          .eq('job_id', job.id)
+          .eq('candidate_id', candidateId);
+
+        await supabaseAdmin
+          .from('job_applications')
+          .update({ status: 'shortlisted_for_hr' })
+          .eq('job_id', job.id)
+          .eq('candidate_id', candidateId);
+
         await supabaseAdmin.from('notifications').insert([{
+          sender_id: job?.employer_id || employerId,
           recipient_id: candidateId,
           title: `Shortlisted for HR Round: ${job.title}`,
           message: `Outstanding! You scored ${finalPercentile}% in Round 2 Advanced Sandbox. Your application has been shortlisted for the final HR round.`,
@@ -277,8 +350,22 @@ export const scoreTeam = async (teamId: string): Promise<ScoringMetrics[]> => {
           }
         }]);
       } else {
-        // Rejected
+        // Rejected — set proper completion status before rejection
+        const completedStatus = teamRound === 1 ? 'round1_completed' : 'round2_completed';
+        await supabaseAdmin
+          .from('job_applications')
+          .update({ status: completedStatus })
+          .eq('job_id', job.id)
+          .eq('candidate_id', candidateId);
+
+        await supabaseAdmin
+          .from('job_applications')
+          .update({ status: 'rejected' })
+          .eq('job_id', job.id)
+          .eq('candidate_id', candidateId);
+
         await supabaseAdmin.from('notifications').insert([{
+          sender_id: job?.employer_id || employerId,
           recipient_id: candidateId,
           title: `Application Update: ${job.title}`,
           message: `Thank you for completing the Round ${teamRound} evaluation. Unfortunately, your profile was not promoted. Feedback: Focus on improving collaboration fluency and telemetry consistency.`,

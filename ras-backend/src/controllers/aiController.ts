@@ -5,7 +5,7 @@ import logger from '../utils/logger';
 
 export const ask = async (req: Request, res: Response) => {
   try {
-    const { prompt, context, sessionId, teamId } = req.body;
+    const { prompt, context, sessionId, teamId, history } = req.body;
 
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
       return res.status(400).json({ error: 'prompt is required and must be a non-empty string' });
@@ -28,7 +28,8 @@ export const ask = async (req: Request, res: Response) => {
       userPrompt: prompt,
       context: context || '',
       sessionId: sessionId || req.user?.id || 'default',
-      round
+      round,
+      history: Array.isArray(history) ? history : []
     });
 
     res.json({ success: true, reply, timestamp: new Date().toISOString() });

@@ -61,6 +61,7 @@ app.use('/api/terminal', terminalRoutes);
 const server = http.createServer(app);
 setupWebSocketServer(server);
 
+// Start listening on configured port
 server.listen(port, () => {
   logger.info(`Server running on port ${port}`);
   challengeSearch.initialize();

@@ -48,3 +48,6 @@ __pycache__/
 *.pyc
 *.db
 telemetry_buffer.db
+
+# Local sandbox scripts
+ras-backend/sandbox/

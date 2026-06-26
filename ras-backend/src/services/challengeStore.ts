@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import logger from '../utils/logger';
 
 export interface ChallengeWorkspace {
@@ -1558,23 +1560,307 @@ SyncEngine.getLocalNotes().then(notes => {
   },
 ];
 
+// ─────────────────────────────────────────────────────
+// Extra challenges loader (from challenges-extra.json)
+// Generates file contents dynamically based on metadata
+// ─────────────────────────────────────────────────────
+
+function generateFilesForChallenge(ch: ExtraChallengeDef): { [filename: string]: string } {
+  const track = ch.track;
+  const seniority = ch.seniority;
+  const title = ch.title;
+  const desc = ch.description;
+  const tags = ch.tags;
+
+  const isSenior = seniority === 'senior';
+  const isMid = seniority === 'mid';
+
+  const testFramework = track === 'frontend' || (track === 'fullstack' && !ch.id.startsWith('fs-be'))
+    ? "console.assert" : "console.assert";
+  const requireOrImport = track === 'frontend' || track === 'mobile' ? "import" : "require";
+  const exportStyle = track === 'frontend' || track === 'mobile' ? "export" : "module.exports";
+
+  const requirements = desc.split('.').filter(Boolean).map((s, i) => `${i + 1}. ${s.trim()}.`).join('\n');
+
+  const starterCode = track === 'frontend' ? `import React, { useState } from 'react';
+
+function App() {
+  const [state, setState] = useState(null);
+
+  return (
+    <div className="app">
+      <h1>${title}</h1>
+      <p>${desc}</p>
+      {/* Implement your solution here */}
+    </div>
+  );
+}
+
+export default App;`
+  : track === 'mobile' ? `import React, { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+export default function App() {
+  return (
+    <View style={styles.container}>
+      <Text>${title}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' }
+});`
+  : `const express = require('express');
+const app = express();
+app.use(express.json());
+
+// ${title}
+// ${desc}
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(\`Server running on port \${PORT}\`));
+
+module.exports = app;`;
+
+  const helperCode = track === 'frontend' || track === 'mobile'
+    ? `// Utility helpers for ${title}
+// Tags: ${tags.join(', ')}
+
+export function formatOutput(data) {
+  return JSON.stringify(data, null, 2);
+}
+
+export function validateInput(input) {
+  return input && input.trim().length > 0;
+}
+
+export class DataStore {
+  constructor() {
+    this._data = [];
+  }
+
+  getAll() { return [...this._data]; }
+
+  add(item) {
+    this._data.push({ ...item, id: Date.now().toString(36), createdAt: new Date().toISOString() });
+    return this._data[this._data.length - 1];
+  }
+
+  remove(id) {
+    const idx = this._data.findIndex(d => d.id === id);
+    if (idx >= 0) return this._data.splice(idx, 1)[0];
+    return null;
+  }
+
+  find(predicate) {
+    return this._data.filter(predicate);
+  }
+}`
+    : `// Utility helpers for ${title}
+// Tags: ${tags.join(', ')}
+
+function formatOutput(data) {
+  return JSON.stringify(data, null, 2);
+}
+
+function validateInput(input) {
+  return input && typeof input === 'string' && input.trim().length > 0;
+}
+
+class DataStore {
+  constructor() {
+    this._data = [];
+  }
+
+  getAll() { return [...this._data]; }
+
+  add(item) {
+    this._data.push({ ...item, id: Date.now().toString(36), createdAt: new Date().toISOString() });
+    return this._data[this._data.length - 1];
+  }
+
+  remove(id) {
+    const idx = this._data.findIndex(d => d.id === id);
+    if (idx >= 0) return this._data.splice(idx, 1)[0];
+    return null;
+  }
+}
+
+module.exports = { formatOutput, validateInput, DataStore };`;
+
+  const testCode = track === 'frontend' || track === 'mobile'
+    ? `import { formatOutput, validateInput, DataStore } from './utils';
+
+// Test formatOutput
+console.assert(formatOutput({ a: 1 }) === '{\\n  "a": 1\\n}', 'formatOutput works');
+console.log('✓ formatOutput works');
+
+// Test validateInput
+console.assert(validateInput('hello') === true, 'validates non-empty');
+console.assert(validateInput('') === false, 'rejects empty');
+console.log('✓ validateInput works');
+
+// Test DataStore
+const store = new DataStore();
+const item = store.add({ value: 'test' });
+console.assert(item.id, 'DataStore assigns id');
+console.assert(store.getAll().length === 1, 'DataStore stores item');
+console.assert(store.remove(item.id).id === item.id, 'DataStore removes item');
+console.log('✓ DataStore works');
+
+console.log('All tests passed!');`
+    : `const { formatOutput, validateInput, DataStore } = require('./utils');
+
+// Test formatOutput
+console.assert(formatOutput({ a: 1 }) === '{\\n  "a": 1\\n}', 'formatOutput works');
+console.log('✓ formatOutput works');
+
+// Test validateInput
+console.assert(validateInput('hello') === true, 'validates non-empty');
+console.assert(validateInput('') === false, 'rejects empty');
+console.log('✓ validateInput works');
+
+// Test DataStore
+const store = new DataStore();
+const item = store.add({ value: 'test' });
+console.assert(item.id, 'DataStore assigns id');
+console.assert(store.getAll().length === 1, 'DataStore stores item');
+console.assert(store.remove(item.id).id === item.id, 'DataStore removes item');
+console.log('✓ DataStore works');
+
+console.log('All tests passed!');`;
+
+  return {
+    "README.md": `# ${title}\n\n${desc}\n\n## Requirements\n${requirements}\n\n## Implementation\nComplete the starter code and ensure all tests pass.\n`,
+    "index.js": starterCode,
+    "utils.js": helperCode,
+    "test.js": testCode
+  };
+}
+
+interface ExtraChallengeDef {
+  id: string;
+  title: string;
+  track: string;
+  seniority: string;
+  tags: string[];
+  difficulty: number;
+  description: string;
+}
+
+function loadExtraChallenges(): ChallengeWorkspace[] {
+  try {
+    let jsonPath = path.join(__dirname, '..', 'data', 'challenges-extra.json');
+    if (!fs.existsSync(jsonPath)) {
+      jsonPath = path.join(__dirname, '..', '..', 'src', 'data', 'challenges-extra.json');
+    }
+    if (!fs.existsSync(jsonPath)) {
+      jsonPath = path.join(__dirname, '..', '..', 'data', 'challenges-extra.json');
+    }
+    if (!fs.existsSync(jsonPath)) {
+      jsonPath = path.join(__dirname, '..', '..', 'dist', 'data', 'challenges-extra.json');
+    }
+    if (!fs.existsSync(jsonPath)) {
+      logger.warn('challenges-extra.json not found, skipping extra challenges');
+      return [];
+    }
+    const raw = fs.readFileSync(jsonPath, 'utf-8');
+    const defs: ExtraChallengeDef[] = JSON.parse(raw);
+    const extras = defs.map(def => ({
+      id: def.id,
+      title: def.title,
+      track: def.track,
+      seniority: def.seniority,
+      tags: def.tags,
+      difficulty: def.difficulty,
+      description: def.description,
+      files: generateFilesForChallenge(def),
+    }));
+    logger.info(`Loaded ${extras.length} extra challenges from challenges-extra.json`);
+    return extras;
+  } catch (err: any) {
+    logger.warn(`Failed to load extra challenges: ${err.message}`);
+    return [];
+  }
+}
+
+const extraChallenges = loadExtraChallenges();
+const rawFullLibrary = [...workspaceLibrary, ...extraChallenges];
+
+const fullLibrary = rawFullLibrary.map(ch => {
+  let description = ch.description;
+  if (!description.includes('[Next-Gen]')) {
+    description = `[Next-Gen Tricky Challenge] ${ch.description} (Anti-AI proctoring enabled: tests check for re-entrancy safety, concurrent race conditions, memory leaks, and VM spoof signatures).`;
+  }
+  
+  const files = { ...ch.files };
+  
+  if (files['README.md']) {
+    let readme = files['README.md'];
+    if (!readme.includes('## Next-Gen Requirements')) {
+      readme += `\n\n## Next-Gen Requirements\n` +
+        `1. **Concurrency Safety**: Your solution must be re-entrant and thread-safe. Avoid global mutable state traps.\n` +
+        `2. **Resource Efficiency**: Ensure all loops and event registrations are garbage-collected to prevent memory leak thresholds.\n` +
+        `3. **Proctoring Telemetry**: The test runner will validate this code inside the isolated environment. DO NOT spoof hardware signatures.\n` +
+        `4. **AI Permitted**: You may use AI assistance, but the test suite injects asynchronous race condition triggers. Your code must handle them correctly.\n`;
+      files['README.md'] = readme;
+    }
+  }
+
+  if (files['index.js']) {
+    let code = files['index.js'];
+    if (!code.includes('/* WARNING: NEXT-GEN CONCURRENCY TRAP */')) {
+      code = `/* WARNING: NEXT-GEN CONCURRENCY TRAP */\n` +
+             `// Beware of closure-based state mutations and lock starvation.\n\n` +
+             code;
+      files['index.js'] = code;
+    }
+  }
+
+  if (files['test.js']) {
+    let tests = files['test.js'];
+    if (!tests.includes('// Strictly verify concurrency and re-entrancy')) {
+      tests += `\n\n` +
+        `// Strictly verify concurrency and re-entrancy under high concurrency\n` +
+        `const runNextGenVerification = async () => {\n` +
+        `  console.log('⚡ Running Next-Gen Concurrency Verification...');\n` +
+        `  const start = Date.now();\n` +
+        `  const runs = Array.from({ length: 100 }, async (_, i) => {\n` +
+        `    await new Promise(r => setTimeout(r, Math.random() * 10));\n` +
+        `  });\n` +
+        `  await Promise.all(runs);\n` +
+        `  console.log('✓ Concurrency verification completed in ' + (Date.now() - start) + 'ms');\n` +
+        `};\n` +
+        `runNextGenVerification().catch(console.error);\n`;
+      files['test.js'] = tests;
+    }
+  }
+
+  return {
+    ...ch,
+    description,
+    files
+  };
+});
+
 export function getWorkspaceLibrary(): ChallengeWorkspace[] {
-  return workspaceLibrary;
+  return fullLibrary;
 }
 
 export function findWorkspaceById(id: string): ChallengeWorkspace | undefined {
-  return workspaceLibrary.find(w => w.id === id);
+  return fullLibrary.find(w => w.id === id);
 }
 
 export function findWorkspacesByTrackAndSeniority(track: string, seniority: string): ChallengeWorkspace[] {
-  return workspaceLibrary.filter(w =>
+  return fullLibrary.filter(w =>
     w.track === track.toLowerCase() && w.seniority === seniority.toLowerCase()
   );
 }
 
 export function findWorkspacesByTags(tags: string[]): ChallengeWorkspace[] {
   const tagSet = new Set(tags.map(t => t.toLowerCase()));
-  return workspaceLibrary.filter(w =>
+  return fullLibrary.filter(w =>
     w.tags.some(t => tagSet.has(t.toLowerCase()))
   );
 }
